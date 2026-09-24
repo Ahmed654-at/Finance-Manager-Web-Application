@@ -42,7 +42,9 @@ next-env.d.ts
 
 
 # AI coding assistant files - local only
+# AI coding assistant files - local only
 .reticle.json
+.reticle/
 RETICLE.md
 AGENTS.md
 CLAUDE.md
