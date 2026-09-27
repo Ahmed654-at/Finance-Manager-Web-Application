@@ -82,7 +82,7 @@ export default async function EditInvoicePage({
     <main className="min-h-screen bg-slate-100 px-4 py-8 text-slate-900">
       <div className="mx-auto max-w-3xl">
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <div className="mb-6 flex items-center justify-between gap-3">
+          <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="text-sm font-medium text-slate-500">Invoices</p>
               <h1 className="mt-1 text-2xl font-semibold text-slate-900">Edit invoice</h1>

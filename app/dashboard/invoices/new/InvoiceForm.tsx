@@ -133,7 +133,7 @@ export default function InvoiceForm({
         </select>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
           <label htmlFor="invoice_number" className="block text-sm font-medium text-slate-700">
             Invoice number
@@ -193,7 +193,7 @@ export default function InvoiceForm({
 
         <div className="space-y-3">
           {lineItems.map((item, index) => (
-            <div key={item.id} className="grid gap-3 rounded-xl border border-slate-200 bg-white p-3 md:grid-cols-[2fr_0.8fr_1.1fr_auto]">
+            <div key={item.id} className="grid grid-cols-1 gap-3 rounded-xl border border-slate-200 bg-white p-3 sm:grid-cols-[2fr_0.8fr_1.1fr_auto]">
               <div>
                 <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">
                   Description
@@ -252,7 +252,7 @@ export default function InvoiceForm({
       </div>
 
       <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 shadow-sm">
-        <div className="grid gap-4 md:grid-cols-[1fr_180px] md:items-end">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-[1fr_180px] sm:items-end">
           <div>
             <label htmlFor="tax" className="block text-sm font-medium text-slate-700">
               Tax

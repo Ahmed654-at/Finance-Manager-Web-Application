@@ -112,7 +112,7 @@ export default async function InvoiceDetailPage({
               <h1 className="mt-1 text-2xl font-semibold text-slate-900">{invoice.invoice_number}</h1>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
               <Link
                 href="/dashboard/invoices"
                 className="text-sm font-medium text-slate-600 transition hover:text-slate-900"
@@ -146,7 +146,7 @@ export default async function InvoiceDetailPage({
             </div>
           </div>
 
-          <div className="mb-6 flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+          <div className="mb-6 flex flex-col gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="text-sm text-slate-500">Status</p>
               <span

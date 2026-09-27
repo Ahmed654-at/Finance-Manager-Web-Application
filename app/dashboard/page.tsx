@@ -66,15 +66,15 @@ export default async function DashboardPage() {
   return (
     <main className="min-h-screen bg-slate-100 px-4 py-8 text-slate-900">
       <div className="mx-auto max-w-6xl">
-        <nav className="mb-8 flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-6 py-4 shadow-sm">
-          <p className="text-xl font-semibold text-slate-900">Finance Manager</p>
-          <div className="flex items-center gap-4">
+        <nav className="mb-8 flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:px-6">
+          <p className="text-lg font-semibold text-slate-900 sm:text-xl">Finance Manager</p>
+          <div className="flex w-full flex-col items-stretch gap-3 sm:w-auto sm:flex-row sm:items-center">
             <NotificationBell initialNotifications={notifications} />
-            <span className="text-sm text-slate-600">{user.email}</span>
-            <form action="/logout" method="post">
+            <span className="hidden truncate text-sm text-slate-600 sm:inline sm:max-w-[12rem]">{user.email}</span>
+            <form action="/logout" method="post" className="w-full sm:w-auto">
               <button
                 type="submit"
-                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:bg-slate-50"
+                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:bg-slate-50 sm:w-auto"
               >
                 Logout
               </button>
@@ -106,9 +106,9 @@ export default async function DashboardPage() {
         </section>
 
         <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <div className="mb-4 flex items-center justify-between gap-3">
+          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <h2 className="text-xl font-semibold text-slate-900">Recent Transactions</h2>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <a
                 href="/dashboard/transactions/new"
                 className="inline-flex items-center rounded-lg bg-slate-900 px-3 py-2 text-sm font-medium text-white transition hover:bg-slate-800"

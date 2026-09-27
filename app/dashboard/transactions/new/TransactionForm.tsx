@@ -46,7 +46,7 @@ export default function TransactionForm({ categories, accounts }: TransactionFor
     <form onSubmit={handleSubmit} className="space-y-5">
       <div>
         <label className="block text-sm font-medium text-slate-700">Type</label>
-        <div className="mt-2 grid grid-cols-2 gap-3">
+        <div className="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-2">
           <label
             className={`flex cursor-pointer items-center justify-center rounded-xl border px-3 py-2 text-sm font-medium transition ${
               type === 'income'

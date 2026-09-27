@@ -149,9 +149,9 @@ export default async function TransactionsPage({
     <main className="min-h-screen bg-slate-100 px-4 py-8 text-slate-900">
       <div className="mx-auto max-w-6xl">
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <div className="mb-6 flex items-center justify-between gap-3">
+          <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <h1 className="text-2xl font-semibold text-slate-900">Transactions</h1>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
               <Link
                 href="/dashboard"
                 className="text-sm font-medium text-slate-600 transition hover:text-slate-900"

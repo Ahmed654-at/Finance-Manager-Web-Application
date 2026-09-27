@@ -145,7 +145,7 @@ export default async function ReportsPage({
     <main className="min-h-screen bg-slate-100 px-4 py-8 text-slate-900">
       <div className="mx-auto max-w-6xl">
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <div className="mb-6 flex items-center justify-between gap-3">
+          <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <h1 className="text-2xl font-semibold text-slate-900">Reports</h1>
             <Link
               href="/dashboard"
@@ -208,7 +208,7 @@ export default async function ReportsPage({
               </div>
 
               <section className="mb-8 rounded-2xl border border-slate-200 bg-slate-50 p-5 shadow-sm">
-                <div className="mb-4 flex items-center justify-between gap-3">
+                <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <h2 className="text-xl font-semibold text-slate-900">Profit & Loss</h2>
                   <p className={`text-2xl font-semibold ${netProfit >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
                     {netProfit >= 0 ? 'Net Profit' : 'Net Loss'}: {currencyFormatter.format(Math.abs(netProfit))}
