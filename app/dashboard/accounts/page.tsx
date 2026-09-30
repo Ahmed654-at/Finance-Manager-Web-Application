@@ -1,15 +1,17 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { getCompanyContext } from '@/lib/company'
+import { canWrite, getCompanyContext } from '@/lib/company'
 import { formatCurrency } from '@/lib/currency'
-import { createAccount } from './actions'
+import DeleteConfirmButton from '../components/DeleteConfirmButton'
+import { createAccount, deleteAccount } from './actions'
 
 type Account = {
   id: string
   name: string
-  type: 'cash' | 'bank' | 'credit'
+  type: 'cash' | 'bank' | 'credit' | 'savings'
   opening_balance: number | string | null
+  is_active: boolean
 }
 
 async function handleCreateAccount(formData: FormData) {
@@ -17,7 +19,12 @@ async function handleCreateAccount(formData: FormData) {
   await createAccount(formData)
 }
 
-export default async function AccountsPage() {
+export default async function AccountsPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ error?: string }>
+}) {
+  const params = (await searchParams) ?? {}
   const supabase = await createClient()
   const {
     data: { user },
@@ -28,7 +35,8 @@ export default async function AccountsPage() {
     redirect('/login')
   }
 
-  const { companyId, company } = await getCompanyContext(supabase, user)
+  const { companyId, company, role } = await getCompanyContext(supabase, user)
+  const canEdit = canWrite(role)
 
   const { data: accountsResult } = await supabase
     .from('accounts')
@@ -78,6 +86,12 @@ export default async function AccountsPage() {
             </Link>
           </div>
 
+          {params.error && (
+            <p className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+              {params.error}
+            </p>
+          )}
+
           <form
             action={handleCreateAccount}
             className="mb-8 space-y-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 shadow-sm"
@@ -109,6 +123,7 @@ export default async function AccountsPage() {
                 <option value="cash">Cash</option>
                 <option value="bank">Bank</option>
                 <option value="credit">Credit</option>
+                <option value="savings">Savings</option>
               </select>
             </div>
 
@@ -151,16 +166,48 @@ export default async function AccountsPage() {
                   <div className="flex items-center justify-between gap-3">
                     <div>
                       <p className="text-base font-semibold text-slate-900">{account.name}</p>
-                      <span className="mt-2 inline-flex rounded-full bg-slate-200 px-2.5 py-1 text-xs font-medium capitalize text-slate-700">
-                        {account.type}
-                      </span>
+                      <div className="mt-2 flex items-center gap-2">
+                        <span className="inline-flex rounded-full bg-slate-200 px-2.5 py-1 text-xs font-medium capitalize text-slate-700">
+                          {account.type}
+                        </span>
+                        {account.is_active === false && (
+                          <span className="inline-flex rounded-full bg-amber-100 px-2.5 py-1 text-xs font-medium text-amber-800">
+                            Inactive
+                          </span>
+                        )}
+                      </div>
                     </div>
 
-                    <p
-                      className={`text-lg font-semibold ${account.currentBalance < 0 ? 'text-red-600' : 'text-slate-900'}`}
-                    >
-                      {formatCurrency(account.currentBalance, company.currency)}
-                    </p>
+                    <div className="flex flex-col items-end gap-2 sm:flex-row sm:items-center sm:gap-4">
+                      <p
+                        className={`text-lg font-semibold ${account.currentBalance < 0 ? 'text-red-600' : 'text-slate-900'}`}
+                      >
+                        {formatCurrency(account.currentBalance, company.currency)}
+                      </p>
+
+                      {canEdit && (
+                        <div className="flex items-center gap-2">
+                          <Link
+                            href={`/dashboard/accounts/${account.id}/edit`}
+                            className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:border-slate-400 hover:bg-slate-50"
+                          >
+                            Edit
+                          </Link>
+                          <DeleteConfirmButton
+                            label="Delete"
+                            confirmText={`Delete "${account.name}"? This cannot be undone.`}
+                            action={async () => {
+                              'use server'
+                              const result = await deleteAccount(account.id)
+                              if (result?.error) {
+                                redirect(`/dashboard/accounts?error=${encodeURIComponent(result.error)}`)
+                              }
+                            }}
+                            className="rounded-lg border border-red-300 bg-red-50 px-3 py-1.5 text-xs font-medium text-red-700 transition hover:border-red-400 hover:bg-red-100"
+                          />
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}
