@@ -1,7 +1,7 @@
 'use client'
 
 type DeleteConfirmButtonProps = {
-  action: (formData: FormData) => Promise<any> | any
+  action: (formData: FormData) => unknown
   label: string
   confirmText?: string
   className?: string
@@ -15,7 +15,8 @@ export default function DeleteConfirmButton({
 }: DeleteConfirmButtonProps) {
   return (
     <form
-      action={action}
+      // Form actions may return a result object; React ignores the return value.
+      action={action as (formData: FormData) => void | Promise<void>}
       onSubmit={(event) => {
         if (!window.confirm(confirmText)) {
           event.preventDefault()

@@ -150,6 +150,10 @@ export async function disburseSalary(formData: FormData) {
     .select('id')
     .single()
 
+  if (txError || !tx) {
+    return { error: txError?.message || 'Could not record the salary expense.' }
+  }
+
   // 2. Insert into salaries table
   const { error: salError } = await supabase.from('salaries').insert({
     company_id: companyId,

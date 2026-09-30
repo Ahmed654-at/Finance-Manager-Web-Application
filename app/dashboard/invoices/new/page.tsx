@@ -1,7 +1,13 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { getCompanyContext } from '@/lib/company'
+import Link from 'next/link'
 import InvoiceForm from './InvoiceForm'
+
+// Kept outside the component: this is a per-request value, not something that should be derived during render.
+function generateInvoiceNumber() {
+  return `INV-${Date.now()}`
+}
 
 export default async function NewInvoicePage() {
   const supabase = await createClient()
@@ -32,7 +38,7 @@ export default async function NewInvoicePage() {
     .order('name')
 
   const offerings = offeringsResult ?? []
-  const suggestedNumber = `INV-${Date.now()}`
+  const suggestedNumber = generateInvoiceNumber()
 
   return (
     <main className="min-h-screen bg-slate-100 px-4 py-8 text-slate-900">
@@ -40,12 +46,12 @@ export default async function NewInvoicePage() {
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
           <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <h1 className="text-2xl font-semibold text-slate-900">New Invoice</h1>
-            <a
+            <Link
               href="/dashboard/invoices"
               className="text-sm font-medium text-slate-600 transition hover:text-slate-900"
             >
               ← Back to invoices
-            </a>
+            </Link>
           </div>
 
           <InvoiceForm

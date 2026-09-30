@@ -37,9 +37,9 @@ export async function sendNotificationEmail(to: string, subject: string, message
     }
 
     return { success: true, data }
-  } catch (error: any) {
+  } catch (error) {
     console.error('Failed to send email notification:', error)
-    return { success: false, error: error?.message || 'Email delivery failed' }
+    return { success: false, error: error instanceof Error ? error.message : 'Email delivery failed' }
   }
 }
 
@@ -53,7 +53,7 @@ export async function sendInvoiceEmail(params: {
   pdfBuffer: Buffer
   type: 'sent' | 'paid'
   currency?: string
-}): Promise<{ success: boolean; error?: string; data?: any }> {
+}): Promise<{ success: boolean; error?: string; data?: unknown }> {
   const { to, dueDate, pdfBuffer, type, total } = params
   const customerName = escapeHtml(params.customerName)
   const companyName = escapeHtml(params.companyName)
@@ -126,8 +126,8 @@ export async function sendInvoiceEmail(params: {
     }
 
     return { success: true, data }
-  } catch (error: any) {
+  } catch (error) {
     console.error(`Failed to send invoice email (${type}):`, error)
-    return { success: false, error: error?.message || 'Email delivery failed' }
+    return { success: false, error: error instanceof Error ? error.message : 'Email delivery failed' }
   }
 }

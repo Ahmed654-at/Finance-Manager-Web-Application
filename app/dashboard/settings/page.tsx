@@ -27,7 +27,7 @@ export default async function CompanySettingsPage() {
     redirect('/login')
   }
 
-  const { companyId, company, role } = await getCompanyContext(supabase, user)
+  const { company, role } = await getCompanyContext(supabase, user)
   const accountName = await getAccountName(supabase, user)
   const canEdit = role === 'owner' || role === 'admin'
 

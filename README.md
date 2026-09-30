@@ -137,11 +137,26 @@ npm run dev
 ```
 Open [http://localhost:3000](http://localhost:3000).
 
-### 6. First steps
+### 6. Optional: load demo data
+So the dashboard is not empty, sign up and sign in once, then open [`seed.sql`](seed.sql), change the email on the line marked `CHANGE THIS`, and run it in the Supabase SQL Editor. It adds sample accounts, customers, transactions, invoices (paid, sent, overdue, draft), payroll, and expense/salary requests in every state. It refuses to run on a company that already has data.
+
+### 7. First steps
 1. Click **Sign Up** and create an account. It becomes the **owner** of a new company.
 2. Open **Team** and add an employee (email, password, role, optional payroll details).
 3. Sign in as that employee in a private window and submit an expense or salary request.
 4. Back as the owner, open **Team Expenses** or **Salary Requests** and approve it. The amount appears in **Transactions**.
+
+---
+
+## Quality checks
+
+```bash
+npm run typecheck   # TypeScript
+npm run lint        # ESLint
+npm test            # unit tests (Vitest)
+```
+
+The tests cover the role-permission rules, currency formatting and payroll-form parsing. The same three checks run on every push through GitHub Actions ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)).
 
 ---
 
@@ -165,7 +180,7 @@ Open [http://localhost:3000](http://localhost:3000).
 - Account balances are adjusted through the account's `opening_balance` rather than a full ledger.
 - The dashboard aggregates in the application; a large dataset would call for database-side aggregation.
 - CSV import uses a simple parser and does not handle line breaks inside quoted fields.
-- No automated test suite yet.
+- Tests cover the pure logic only; the database policies and server actions are checked by hand, not by automated integration tests.
 
 ## License
 Educational project.

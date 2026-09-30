@@ -126,15 +126,17 @@ export default function InvoiceForm({
       <div>
         <label className="block text-sm font-medium text-slate-700">Billing Category / Stream</label>
         <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-3">
-          {[
-            { key: 'ai_service', label: '🤖 AI Services', desc: 'Custom models, agents, consulting' },
-            { key: 'product_sale', label: '📦 Product Sale', desc: 'Software, licenses, digital goods' },
-            { key: 'general', label: '💼 General', desc: 'Standard billing' },
-          ].map((type) => (
+          {(
+            [
+              { key: 'ai_service', label: '🤖 AI Services', desc: 'Custom models, agents, consulting' },
+              { key: 'product_sale', label: '📦 Product Sale', desc: 'Software, licenses, digital goods' },
+              { key: 'general', label: '💼 General', desc: 'Standard billing' },
+            ] as const
+          ).map((type) => (
             <button
               key={type.key}
               type="button"
-              onClick={() => setServiceType(type.key as any)}
+              onClick={() => setServiceType(type.key)}
               className={`rounded-xl border p-3 text-left transition ${
                 serviceType === type.key
                   ? 'border-slate-900 bg-slate-900 text-white'

@@ -41,8 +41,6 @@ export default async function DashboardPage() {
     .filter((t) => t.type === 'income' && (t.revenue_stream === 'product_sales' || t.categories?.name?.toLowerCase().includes('product')))
     .reduce((sum, t) => sum + Number(t.amount || 0), 0)
 
-  const otherIncome = Math.max(0, totalIncome - aiIncome - productIncome)
-
   // Expense Stream Breakdown
   const salaryExpenses = allData
     .filter((t) => t.type === 'expense' && (t.expense_type === 'salary' || t.categories?.name?.toLowerCase().includes('salary')))
@@ -50,10 +48,6 @@ export default async function DashboardPage() {
 
   const teamExpensesTotal = allData
     .filter((t) => t.type === 'expense' && (t.expense_type === 'team_expense' || t.categories?.name?.toLowerCase().includes('team')))
-    .reduce((sum, t) => sum + Number(t.amount || 0), 0)
-
-  const infraExpenses = allData
-    .filter((t) => t.type === 'expense' && (t.expense_type === 'infrastructure' || t.categories?.name?.toLowerCase().includes('infrastructure') || t.categories?.name?.toLowerCase().includes('cloud')))
     .reduce((sum, t) => sum + Number(t.amount || 0), 0)
 
   // 2. Fetch Invoices

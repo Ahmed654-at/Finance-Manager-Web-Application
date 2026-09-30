@@ -24,7 +24,6 @@ const navItems: NavItem[] = [
 ]
 
 export default function DashboardNav({
-  companyName,
   userEmail,
   accountName,
 }: {

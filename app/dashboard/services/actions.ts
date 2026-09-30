@@ -62,7 +62,6 @@ export async function recordRevenueFromCatalog(formData: FormData) {
   }
 
   const serviceId = formData.get('service_id') as string
-  const customerId = (formData.get('customer_id') as string | null) || null
   const amount = parseFloat((formData.get('amount') as string) || '0')
   const date = (formData.get('date') as string | null) || new Date().toISOString().slice(0, 10)
   const accountId = (formData.get('account_id') as string | null) || null
@@ -101,7 +100,7 @@ export async function recordRevenueFromCatalog(formData: FormData) {
   // 1. Create income transaction
   const description = `${item.type === 'ai_service' ? 'AI Service Revenue' : 'Product Sale'}: ${item.name}${notes ? ` - ${notes}` : ''}`
   
-  const { data: tx, error: txError } = await supabase
+  const { error: txError } = await supabase
     .from('transactions')
     .insert({
       company_id: companyId,
