@@ -1,21 +1,45 @@
 import { Resend } from 'resend'
+import { formatCurrency } from '@/lib/currency'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
+function escapeHtml(value: string) {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
 export async function sendNotificationEmail(to: string, subject: string, message: string) {
   if (!to) {
-    return
+    return { success: false, error: 'Recipient email is missing.' }
+  }
+
+  const apiKey = process.env.RESEND_API_KEY
+  if (!apiKey) {
+    return { success: false, error: 'RESEND_API_KEY is missing in environment variables.' }
   }
 
   try {
-    await resend.emails.send({
-      from: 'Finance Manager <onboarding@resend.dev>',
+    const fromAddress = process.env.RESEND_FROM_EMAIL || 'Finance Manager <onboarding@resend.dev>'
+    const { data, error } = await resend.emails.send({
+      from: fromAddress,
       to,
       subject,
-      html: `<p>${message}</p>`,
+      html: `<p>${escapeHtml(message)}</p>`,
     })
-  } catch (error) {
+
+    if (error) {
+      console.error('Failed to send email notification:', error)
+      return { success: false, error: error.message }
+    }
+
+    return { success: true, data }
+  } catch (error: any) {
     console.error('Failed to send email notification:', error)
+    return { success: false, error: error?.message || 'Email delivery failed' }
   }
 }
 
@@ -28,17 +52,23 @@ export async function sendInvoiceEmail(params: {
   dueDate: string | null
   pdfBuffer: Buffer
   type: 'sent' | 'paid'
-}) {
-  const { to, customerName, companyName, invoiceNumber, total, dueDate, pdfBuffer, type } = params
+  currency?: string
+}): Promise<{ success: boolean; error?: string; data?: any }> {
+  const { to, dueDate, pdfBuffer, type, total } = params
+  const customerName = escapeHtml(params.customerName)
+  const companyName = escapeHtml(params.companyName)
+  const invoiceNumber = escapeHtml(params.invoiceNumber)
 
   if (!to) {
-    return
+    return { success: false, error: 'Customer email address is missing on file.' }
   }
 
-  const totalFormatted = new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-  }).format(Number(total || 0))
+  const apiKey = process.env.RESEND_API_KEY
+  if (!apiKey) {
+    return { success: false, error: 'RESEND_API_KEY is not configured in your .env file.' }
+  }
+
+  const totalFormatted = formatCurrency(Number(total || 0), params.currency)
 
   const dueDateLabel = dueDate
     ? new Intl.DateTimeFormat('en-US', {
@@ -50,8 +80,8 @@ export async function sendInvoiceEmail(params: {
 
   const subject =
     type === 'paid'
-      ? `Payment received — Invoice ${invoiceNumber}`
-      : `Invoice ${invoiceNumber} from ${companyName}`
+      ? `Payment received — Invoice ${params.invoiceNumber}`
+      : `Invoice ${params.invoiceNumber} from ${params.companyName}`
 
   const html =
     type === 'paid'
@@ -70,8 +100,9 @@ export async function sendInvoiceEmail(params: {
       `
 
   try {
+    const fromAddress = process.env.RESEND_FROM_EMAIL || 'Finance Manager <onboarding@resend.dev>'
     const payload: Parameters<typeof resend.emails.send>[0] = {
-      from: 'Finance Manager <onboarding@resend.dev>',
+      from: fromAddress,
       to,
       subject,
       html,
@@ -80,14 +111,23 @@ export async function sendInvoiceEmail(params: {
     if (pdfBuffer && pdfBuffer.length > 0) {
       payload.attachments = [
         {
-          filename: type === 'paid' ? `receipt-${invoiceNumber}.pdf` : `invoice-${invoiceNumber}.pdf`,
+          filename:
+            type === 'paid' ? `receipt-${params.invoiceNumber}.pdf` : `invoice-${params.invoiceNumber}.pdf`,
           content: pdfBuffer,
         },
       ]
     }
 
-    await resend.emails.send(payload)
-  } catch (error) {
+    const { data, error } = await resend.emails.send(payload)
+
+    if (error) {
+      console.error(`Resend API error (${type}):`, error)
+      return { success: false, error: error.message }
+    }
+
+    return { success: true, data }
+  } catch (error: any) {
     console.error(`Failed to send invoice email (${type}):`, error)
+    return { success: false, error: error?.message || 'Email delivery failed' }
   }
 }

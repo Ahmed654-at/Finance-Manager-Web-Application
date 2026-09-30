@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { logAudit } from '@/lib/audit'
 import { createClient } from '@/lib/supabase/server'
+import { getCompanyContext, canWrite, READ_ONLY_ERROR } from '@/lib/company'
 
 export async function createBudget(formData: FormData) {
   const supabase = await createClient()
@@ -17,16 +18,8 @@ export async function createBudget(formData: FormData) {
     redirect('/login')
   }
 
-  const { data: membership } = await supabase
-    .from('company_members')
-    .select('company_id')
-    .eq('user_id', user.id)
-    .limit(1)
-    .maybeSingle()
-
-  if (!membership) {
-    redirect('/onboarding')
-  }
+  const { companyId, role } = await getCompanyContext(supabase, user)
+  if (!canWrite(role)) return { error: READ_ONLY_ERROR }
 
   const name = String(formData.get('name') ?? '').trim()
   const categoryId = String(formData.get('category_id') ?? '').trim()
@@ -61,7 +54,7 @@ export async function createBudget(formData: FormData) {
   const { data: budget, error: insertError } = await supabase
     .from('budgets')
     .insert({
-      company_id: membership.company_id,
+      company_id: companyId,
       category_id: categoryId,
       name,
       amount: amountValue,
@@ -72,11 +65,11 @@ export async function createBudget(formData: FormData) {
     .single()
 
   if (insertError || !budget?.id) {
-    return { error: 'Could not create budget. Please try again.' }
+    return { error: insertError?.message || 'Could not create budget. Please try again.' }
   }
 
   await logAudit({
-    companyId: membership.company_id,
+    companyId,
     userId: user.id,
     action: 'created',
     entityType: 'budget',
@@ -100,16 +93,8 @@ export async function updateBudget(budgetId: string, formData: FormData) {
     redirect('/login')
   }
 
-  const { data: membership } = await supabase
-    .from('company_members')
-    .select('company_id')
-    .eq('user_id', user.id)
-    .limit(1)
-    .maybeSingle()
-
-  if (!membership) {
-    redirect('/onboarding')
-  }
+  const { companyId, role } = await getCompanyContext(supabase, user)
+  if (!canWrite(role)) return { error: READ_ONLY_ERROR }
 
   const name = String(formData.get('name') ?? '').trim()
   const categoryId = String(formData.get('category_id') ?? '').trim()
@@ -151,14 +136,14 @@ export async function updateBudget(budgetId: string, formData: FormData) {
       end_date: endDate,
     })
     .eq('id', budgetId)
-    .eq('company_id', membership.company_id)
+    .eq('company_id', companyId)
 
   if (updateError) {
-    return { error: 'Could not update budget. Please try again.' }
+    return { error: updateError?.message || 'Could not update budget. Please try again.' }
   }
 
   await logAudit({
-    companyId: membership.company_id,
+    companyId,
     userId: user.id,
     action: 'updated',
     entityType: 'budget',
@@ -182,22 +167,14 @@ export async function deleteBudget(budgetId: string) {
     redirect('/login')
   }
 
-  const { data: membership } = await supabase
-    .from('company_members')
-    .select('company_id')
-    .eq('user_id', user.id)
-    .limit(1)
-    .maybeSingle()
-
-  if (!membership) {
-    redirect('/onboarding')
-  }
+  const { companyId, role } = await getCompanyContext(supabase, user)
+  if (!canWrite(role)) return { error: READ_ONLY_ERROR }
 
   const { data: budgetToDelete } = await supabase
     .from('budgets')
     .select('id, name')
     .eq('id', budgetId)
-    .eq('company_id', membership.company_id)
+    .eq('company_id', companyId)
     .limit(1)
     .maybeSingle()
 
@@ -209,14 +186,14 @@ export async function deleteBudget(budgetId: string) {
     .from('budgets')
     .delete()
     .eq('id', budgetId)
-    .eq('company_id', membership.company_id)
+    .eq('company_id', companyId)
 
   if (deleteError) {
-    return { error: 'Could not delete budget. Please try again.' }
+    return { error: deleteError?.message || 'Could not delete budget. Please try again.' }
   }
 
   await logAudit({
-    companyId: membership.company_id,
+    companyId,
     userId: user.id,
     action: 'deleted',
     entityType: 'budget',

@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { Suspense, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { login, signup } from './actions'
@@ -65,7 +66,7 @@ function LoginForm() {
 
         {error ? (
           <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-            {decodeURIComponent(error)}
+            {error}
           </div>
         ) : null}
 
@@ -106,6 +107,14 @@ function LoginForm() {
           >
             {isSignUp ? 'Create account' : 'Sign In'}
           </button>
+
+          {!isSignUp && (
+            <p className="text-center text-sm">
+              <Link href="/forgot-password" className="font-medium text-slate-600 hover:text-slate-900">
+                Forgot password?
+              </Link>
+            </p>
+          )}
         </form>
       </div>
     </main>

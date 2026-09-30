@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { getCompanyContext, ensureDefaultCategories } from '@/lib/company'
 import DeleteConfirmButton from '../components/DeleteConfirmButton'
 import { createCategory, deleteCategory } from './actions'
 
@@ -20,37 +21,13 @@ export default async function CategoriesPage() {
     redirect('/login')
   }
 
-  const { data: membership } = await supabase
-    .from('company_members')
-    .select('company_id')
-    .eq('user_id', user.id)
-    .limit(1)
-    .maybeSingle()
-
-  if (!membership) {
-    redirect('/onboarding')
-  }
-
-  const { data: existingCategories } = await supabase
-    .from('categories')
-    .select('id')
-    .eq('company_id', membership.company_id)
-
-  if (!existingCategories || existingCategories.length === 0) {
-    const defaultExpenseCategories = [
-      { company_id: membership.company_id, name: 'Software', type: 'expense', description: 'Software and tools' },
-      { company_id: membership.company_id, name: 'Marketing', type: 'expense', description: 'Campaign and promotion spend' },
-      { company_id: membership.company_id, name: 'Rent', type: 'expense', description: 'Office or property rent' },
-      { company_id: membership.company_id, name: 'Invoices', type: 'expense', description: 'Vendor and supplier invoices' },
-    ]
-
-    await supabase.from('categories').insert(defaultExpenseCategories)
-  }
+  const { companyId } = await getCompanyContext(supabase, user)
+  await ensureDefaultCategories(supabase, companyId)
 
   const { data: categoriesResult } = await supabase
     .from('categories')
     .select('*')
-    .eq('company_id', membership.company_id)
+    .eq('company_id', companyId)
     .order('name')
 
   const categories = categoriesResult ?? []

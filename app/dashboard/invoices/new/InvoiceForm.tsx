@@ -8,6 +8,13 @@ type Customer = {
   name: string
 }
 
+type Offering = {
+  id: string
+  name: string
+  type: string
+  price: number
+}
+
 type LineItem = {
   id: string
   description: string
@@ -32,12 +39,15 @@ const makeRow = (): LineItem => ({
 
 export default function InvoiceForm({
   customers,
+  offerings = [],
   suggestedNumber,
 }: {
   customers: Customer[]
+  offerings?: Offering[]
   suggestedNumber: string
 }) {
   const [customerId, setCustomerId] = useState('')
+  const [serviceType, setServiceType] = useState<'ai_service' | 'product_sale' | 'general'>('ai_service')
   const [invoiceNumber, setInvoiceNumber] = useState(suggestedNumber)
   const [issueDate, setIssueDate] = useState(new Date().toISOString().slice(0, 10))
   const [dueDate, setDueDate] = useState('')
@@ -85,6 +95,7 @@ export default function InvoiceForm({
 
     const formData = new FormData(event.currentTarget)
     formData.set('customer_id', customerId)
+    formData.set('service_type', serviceType)
     formData.set('invoice_number', invoiceNumber.trim())
     formData.set('issue_date', issueDate)
     formData.set('due_date', dueDate)
@@ -112,6 +123,33 @@ export default function InvoiceForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
+      <div>
+        <label className="block text-sm font-medium text-slate-700">Billing Category / Stream</label>
+        <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-3">
+          {[
+            { key: 'ai_service', label: '🤖 AI Services', desc: 'Custom models, agents, consulting' },
+            { key: 'product_sale', label: '📦 Product Sale', desc: 'Software, licenses, digital goods' },
+            { key: 'general', label: '💼 General', desc: 'Standard billing' },
+          ].map((type) => (
+            <button
+              key={type.key}
+              type="button"
+              onClick={() => setServiceType(type.key as any)}
+              className={`rounded-xl border p-3 text-left transition ${
+                serviceType === type.key
+                  ? 'border-slate-900 bg-slate-900 text-white'
+                  : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
+              }`}
+            >
+              <p className="text-xs font-semibold">{type.label}</p>
+              <p className={`mt-0.5 text-[10px] ${serviceType === type.key ? 'text-slate-300' : 'text-slate-500'}`}>
+                {type.desc}
+              </p>
+            </button>
+          ))}
+        </div>
+      </div>
+
       <div>
         <label htmlFor="customer_id" className="block text-sm font-medium text-slate-700">
           Customer
@@ -180,15 +218,50 @@ export default function InvoiceForm({
       </div>
 
       <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 shadow-sm">
-        <div className="mb-3 flex items-center justify-between gap-3">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
           <h2 className="text-base font-semibold text-slate-900">Line items</h2>
-          <button
-            type="button"
-            onClick={addLineItem}
-            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:bg-slate-50"
-          >
-            + Add line
-          </button>
+          <div className="flex items-center gap-2">
+            {offerings.length > 0 && (
+              <select
+                onChange={(e) => {
+                  const val = e.target.value
+                  if (val) {
+                    const off = offerings.find((o) => o.id === val)
+                    if (off) {
+                      setLineItems((curr) => [
+                        ...curr,
+                        {
+                          id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `line-${Date.now()}`,
+                          description: off.name,
+                          quantity: '1',
+                          unit_price: String(off.price || '0'),
+                        },
+                      ])
+                      if (off.type === 'ai_service') setServiceType('ai_service')
+                      if (off.type === 'product') setServiceType('product_sale')
+                    }
+                    e.target.value = ''
+                  }
+                }}
+                defaultValue=""
+                className="rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 focus:outline-none"
+              >
+                <option value="">+ Add from Catalog...</option>
+                {offerings.map((off) => (
+                  <option key={off.id} value={off.id}>
+                    {off.type === 'ai_service' ? '🤖' : '📦'} {off.name} ({currencyFormatter.format(off.price)})
+                  </option>
+                ))}
+              </select>
+            )}
+            <button
+              type="button"
+              onClick={addLineItem}
+              className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:border-slate-400 hover:bg-slate-50"
+            >
+              + Add empty line
+            </button>
+          </div>
         </div>
 
         <div className="space-y-3">

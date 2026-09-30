@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { getCompanyContext } from '@/lib/company'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 
 type AuditLog = {
@@ -54,18 +55,7 @@ export default async function ActivityLogPage({
     redirect('/login')
   }
 
-  const { data: membership } = await supabase
-    .from('company_members')
-    .select('company_id')
-    .eq('user_id', user.id)
-    .limit(1)
-    .maybeSingle()
-
-  if (!membership) {
-    redirect('/onboarding')
-  }
-
-  const companyId = membership.company_id
+  const { companyId } = await getCompanyContext(supabase, user)
 
   let query = supabase
     .from('audit_logs')

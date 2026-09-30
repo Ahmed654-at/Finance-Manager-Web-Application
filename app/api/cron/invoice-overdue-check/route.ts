@@ -1,11 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { sendNotificationEmail } from '@/lib/email'
+import { timingSafeEqual } from 'node:crypto'
+
+function isAuthorized(request: NextRequest) {
+  const expected = process.env.CRON_SECRET
+  if (!expected) return false
+
+  const header = request.headers.get('authorization') ?? ''
+  const provided = header.startsWith('Bearer ') ? header.slice(7) : ''
+  const a = Buffer.from(provided)
+  const b = Buffer.from(expected)
+
+  return a.length === b.length && timingSafeEqual(a, b)
+}
 
 export async function GET(request: NextRequest) {
-  const secret = request.nextUrl.searchParams.get('secret')
-
-  if (secret !== process.env.CRON_SECRET) {
+  if (!isAuthorized(request)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 

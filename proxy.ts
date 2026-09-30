@@ -33,44 +33,17 @@ export async function proxy(request: NextRequest) {
 
   const isAuthRoute = pathname.startsWith('/login')
   const isOnboardingRoute = pathname.startsWith('/onboarding')
-  const isProtectedRoute = pathname.startsWith('/dashboard')
+  const isProtectedRoute =
+    pathname.startsWith('/dashboard') || pathname.startsWith('/my-expenses') || pathname.startsWith('/account')
 
   // Not logged in, trying to reach a protected route → send to login
   if (!user && isProtectedRoute) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
-  // Logged in, trying to reach the login page → send to dashboard
-  if (user && isAuthRoute) {
+  // Logged in, trying to reach login or onboarding → send to dashboard
+  if (user && (isAuthRoute || isOnboardingRoute)) {
     return NextResponse.redirect(new URL('/dashboard', request.url))
-  }
-
-  // Logged in but trying to reach dashboard — check if they belong to a company
-  if (user && isProtectedRoute) {
-    const { data: membership } = await supabase
-      .from('company_members')
-      .select('company_id')
-      .eq('user_id', user.id)
-      .limit(1)
-      .maybeSingle()
-
-    if (!membership) {
-      return NextResponse.redirect(new URL('/onboarding', request.url))
-    }
-  }
-
-  // Logged in and already has a company, but visiting onboarding again → send to dashboard
-  if (user && isOnboardingRoute) {
-    const { data: membership } = await supabase
-      .from('company_members')
-      .select('company_id')
-      .eq('user_id', user.id)
-      .limit(1)
-      .maybeSingle()
-
-    if (membership) {
-      return NextResponse.redirect(new URL('/dashboard', request.url))
-    }
   }
 
   return response

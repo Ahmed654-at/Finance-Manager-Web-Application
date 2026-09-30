@@ -3,6 +3,7 @@
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
+import { getCompanyContext } from '@/lib/company'
 
 export async function updateCompany(formData: FormData) {
   const supabase = await createClient()
@@ -16,19 +17,7 @@ export async function updateCompany(formData: FormData) {
     redirect('/login')
   }
 
-  const { data: membership } = await supabase
-    .from('company_members')
-    .select('company_id, role')
-    .eq('user_id', user.id)
-    .limit(1)
-    .maybeSingle()
-
-  if (!membership) {
-    redirect('/onboarding')
-  }
-
-  const companyId = membership.company_id
-  const role = membership.role || 'member'
+  const { companyId, role } = await getCompanyContext(supabase, user)
 
   if (role !== 'owner' && role !== 'admin') {
     return { error: 'You do not have permission to edit company settings.' }
@@ -59,6 +48,41 @@ export async function updateCompany(formData: FormData) {
     return { error: 'Could not update company settings.' }
   }
 
+  revalidatePath('/dashboard/settings')
+
+  return { success: true }
+}
+
+export async function updateAccountProfile(formData: FormData) {
+  const supabase = await createClient()
+
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser()
+
+  if (!user || error) {
+    redirect('/login')
+  }
+
+  const accountName = (formData.get('account_name') as string | null)?.trim() ?? ''
+  if (!accountName) {
+    return { error: 'Account name cannot be empty.' }
+  }
+
+  const { error: updateError } = await supabase.auth.updateUser({
+    data: {
+      full_name: accountName,
+      name: accountName,
+      display_name: accountName,
+    },
+  })
+
+  if (updateError) {
+    return { error: updateError.message || 'Could not update account profile.' }
+  }
+
+  revalidatePath('/dashboard', 'layout')
   revalidatePath('/dashboard/settings')
 
   return { success: true }

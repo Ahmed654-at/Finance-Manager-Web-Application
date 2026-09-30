@@ -2,12 +2,9 @@ import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
 import DeleteConfirmButton from '../../components/DeleteConfirmButton'
 import { createClient } from '@/lib/supabase/server'
+import { getCompanyContext } from '@/lib/company'
+import { formatCurrency } from '@/lib/currency'
 import { deleteInvoice, sendInvoiceToCustomer, updateInvoiceStatus } from './actions'
-
-const currencyFormatter = new Intl.NumberFormat('en-US', {
-  style: 'currency',
-  currency: 'USD',
-})
 
 const statusClasses: Record<string, string> = {
   draft: 'bg-slate-100 text-slate-700',
@@ -49,15 +46,26 @@ async function handleSendInvoice(formData: FormData) {
 
   const invoiceId = String(formData.get('invoice_id') ?? '')
 
-  await sendInvoiceToCustomer(invoiceId)
+  const result = await sendInvoiceToCustomer(invoiceId)
+  if (result?.error) {
+    redirect(`/dashboard/invoices/${invoiceId}?error=${encodeURIComponent(result.error)}`)
+  }
+
+  redirect(`/dashboard/invoices/${invoiceId}?sent=1`)
 }
 
 export default async function InvoiceDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>
+  searchParams?: Promise<{ sent?: string; error?: string }>
 }) {
   const { id } = await params
+  const resolvedSearchParams = searchParams ? await searchParams : undefined
+  const sent = resolvedSearchParams?.sent
+  const errorMessage = resolvedSearchParams?.error
+
   const supabase = await createClient()
 
   const {
@@ -69,18 +77,7 @@ export default async function InvoiceDetailPage({
     redirect('/login')
   }
 
-  const { data: membership } = await supabase
-    .from('company_members')
-    .select('company_id')
-    .eq('user_id', user.id)
-    .limit(1)
-    .maybeSingle()
-
-  if (!membership) {
-    redirect('/onboarding')
-  }
-
-  const companyId = membership.company_id
+  const { companyId, company } = await getCompanyContext(supabase, user)
 
   const { data: invoice, error: invoiceError } = await supabase
     .from('invoices')
@@ -105,6 +102,83 @@ export default async function InvoiceDetailPage({
   return (
     <main className="min-h-screen bg-slate-100 px-4 py-8 text-slate-900">
       <div className="mx-auto max-w-5xl">
+        {sent === '1' && (
+          <div className="mb-4 flex items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-emerald-900 shadow-sm">
+            <svg
+              className="mt-0.5 h-5 w-5 flex-shrink-0 text-emerald-600"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+            <div>
+              <h3 className="text-sm font-semibold text-emerald-900">Invoice Email Sent Successfully</h3>
+              <p className="mt-1 text-xs text-emerald-700">
+                The invoice email and PDF attachment have been dispatched to{' '}
+                <span className="font-semibold">{invoice.customers?.email}</span>.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {errorMessage && (
+          <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-4 text-red-900 shadow-sm">
+            <div className="flex items-start gap-3">
+              <svg
+                className="mt-0.5 h-5 w-5 flex-shrink-0 text-red-600"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                />
+              </svg>
+              <div className="flex-1">
+                <h3 className="text-sm font-semibold text-red-900">Email Delivery Failed</h3>
+                <p className="mt-1 font-mono text-xs text-red-800 rounded border border-red-200 bg-red-100/70 p-2 break-all">
+                  {errorMessage}
+                </p>
+
+                {(errorMessage.toLowerCase().includes('testing emails') ||
+                  errorMessage.toLowerCase().includes('resend.com/domains') ||
+                  errorMessage.toLowerCase().includes('validation_error')) && (
+                  <div className="mt-3 rounded-lg border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900">
+                    <p className="font-semibold text-amber-950">Why did this happen?</p>
+                    <p className="mt-1 leading-relaxed">
+                      Your Resend account is currently in free <strong>Sandbox mode</strong> (using{' '}
+                      <code>onboarding@resend.dev</code>). Resend restricts test emails strictly to the email address
+                      registered to that Resend account.
+                    </p>
+                    <p className="mt-2 font-medium text-amber-950">How to deliver emails to your inbox or customers:</p>
+                    <ul className="mt-1 list-disc pl-4 space-y-1 text-amber-900">
+                      <li>
+                        <strong>Free option (for testing):</strong> Sign up free at{' '}
+                        <a href="https://resend.com" target="_blank" rel="noreferrer" className="font-semibold underline">
+                          resend.com
+                        </a>{' '}
+                        with your personal email, copy your API key, and put it in <code>.env</code> as{' '}
+                        <code>RESEND_API_KEY</code>. You can then test sending to your own email address!
+                      </li>
+                      <li>
+                        <strong>Production option:</strong> Add and verify your company domain at{' '}
+                        <a href="https://resend.com/domains" target="_blank" rel="noreferrer" className="font-semibold underline">
+                          resend.com/domains
+                        </a>{' '}
+                        to send to any customer email address worldwide.
+                      </li>
+                    </ul>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
           <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
@@ -264,18 +338,18 @@ export default async function InvoiceDetailPage({
                 <div className="flex items-center justify-between">
                   <span>Subtotal</span>
                   <span className="font-medium text-slate-900">
-                    {currencyFormatter.format(Number(invoice.subtotal || 0))}
+                    {formatCurrency(Number(invoice.subtotal || 0), company.currency)}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span>Tax</span>
                   <span className="font-medium text-slate-900">
-                    {currencyFormatter.format(Number(invoice.tax || 0))}
+                    {formatCurrency(Number(invoice.tax || 0), company.currency)}
                   </span>
                 </div>
                 <div className="flex items-center justify-between border-t border-slate-200 pt-3 text-base font-semibold text-slate-900">
                   <span>Total</span>
-                  <span>{currencyFormatter.format(Number(invoice.total || 0))}</span>
+                  <span>{formatCurrency(Number(invoice.total || 0), company.currency)}</span>
                 </div>
               </div>
             </div>
@@ -303,9 +377,9 @@ export default async function InvoiceDetailPage({
                     <tr key={item.id} className="border-t border-slate-200 text-sm text-slate-700">
                       <td className="px-4 py-3">{item.description}</td>
                       <td className="px-4 py-3">{Number(item.quantity || 0)}</td>
-                      <td className="px-4 py-3">{currencyFormatter.format(Number(item.unit_price || 0))}</td>
+                      <td className="px-4 py-3">{formatCurrency(Number(item.unit_price || 0), company.currency)}</td>
                       <td className="px-4 py-3 font-medium text-slate-900">
-                        {currencyFormatter.format(Number(item.amount || 0))}
+                        {formatCurrency(Number(item.amount || 0), company.currency)}
                       </td>
                     </tr>
                   ))

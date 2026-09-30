@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { getCompanyContext } from '@/lib/company'
 
 function csvEscape(value: string | number | null | undefined) {
   const stringValue = String(value ?? '')
@@ -26,18 +27,7 @@ export async function GET(request: NextRequest) {
     return new Response('Unauthorized', { status: 401 })
   }
 
-  const { data: membership } = await supabase
-    .from('company_members')
-    .select('company_id')
-    .eq('user_id', user.id)
-    .limit(1)
-    .maybeSingle()
-
-  if (!membership) {
-    return new Response('Not found', { status: 404 })
-  }
-
-  const companyId = membership.company_id
+  const { companyId } = await getCompanyContext(supabase, user)
 
   let query = supabase
     .from('transactions')

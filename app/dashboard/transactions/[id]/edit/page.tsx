@@ -56,26 +56,13 @@ export default function EditTransactionPage() {
         return
       }
 
-      const { data: membership } = await supabase
-        .from('company_members')
-        .select('company_id')
-        .eq('user_id', user.id)
-        .limit(1)
-        .maybeSingle()
-
-      if (!membership) {
-        router.push('/onboarding')
-        return
-      }
-
       const [{ data: categoriesData }, { data: accountsData }, { data: transactionData }] = await Promise.all([
-        supabase.from('categories').select('*').eq('company_id', membership.company_id).order('name'),
-        supabase.from('accounts').select('*').eq('company_id', membership.company_id).order('name'),
+        supabase.from('categories').select('*').order('name'),
+        supabase.from('accounts').select('*').order('name'),
         supabase
           .from('transactions')
           .select('*')
           .eq('id', id)
-          .eq('company_id', membership.company_id)
           .limit(1)
           .maybeSingle(),
       ])
@@ -272,7 +259,9 @@ export default function EditTransactionPage() {
 
           <div className="mt-4">
             <DeleteConfirmButton
-              action={deleteTransaction.bind(null, id)}
+              action={async () => {
+                await deleteTransaction(id)
+              }}
               label="Delete"
               confirmText="Delete this transaction?"
               className="rounded-lg border border-red-300 bg-red-50 px-4 py-2.5 text-sm font-medium text-red-700 transition hover:border-red-400 hover:bg-red-100"

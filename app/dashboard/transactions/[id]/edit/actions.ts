@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { logAudit } from '@/lib/audit'
 import { createClient } from '@/lib/supabase/server'
+import { getCompanyContext, canWrite, READ_ONLY_ERROR } from '@/lib/company'
 
 export async function updateTransaction(transactionId: string, formData: FormData) {
   const supabase = await createClient()
@@ -17,16 +18,8 @@ export async function updateTransaction(transactionId: string, formData: FormDat
     redirect('/login')
   }
 
-  const { data: membership } = await supabase
-    .from('company_members')
-    .select('company_id')
-    .eq('user_id', user.id)
-    .limit(1)
-    .maybeSingle()
-
-  if (!membership) {
-    redirect('/onboarding')
-  }
+  const { companyId, role } = await getCompanyContext(supabase, user)
+  if (!canWrite(role)) return { error: READ_ONLY_ERROR }
 
   const type = String(formData.get('type') ?? '').trim()
   const amountValue = Number(formData.get('amount'))
@@ -54,7 +47,7 @@ export async function updateTransaction(transactionId: string, formData: FormDat
     .from('transactions')
     .select('id')
     .eq('id', transactionId)
-    .eq('company_id', membership.company_id)
+    .eq('company_id', companyId)
     .limit(1)
     .maybeSingle()
 
@@ -74,21 +67,22 @@ export async function updateTransaction(transactionId: string, formData: FormDat
       reference: reference || null,
     })
     .eq('id', transactionId)
-    .eq('company_id', membership.company_id)
+    .eq('company_id', companyId)
 
   if (updateError) {
-    return { error: 'Could not update transaction. Please try again.' }
+    return { error: updateError?.message || 'Could not update transaction. Please try again.' }
   }
 
   await logAudit({
-    companyId: membership.company_id,
+    companyId,
     userId: user.id,
     action: 'updated',
     entityType: 'transaction',
     entityId: transactionId,
-    summary: `Updated ${type} transaction of ${amountValue} in ${categoryId ? 'a category' : 'no category'}`,
+    summary: `Updated transaction ${transactionId} to ${type} ${amountValue}`,
   })
 
+  revalidatePath('/dashboard')
   revalidatePath('/dashboard/transactions')
   redirect('/dashboard/transactions')
 }
@@ -105,22 +99,14 @@ export async function deleteTransaction(transactionId: string) {
     redirect('/login')
   }
 
-  const { data: membership } = await supabase
-    .from('company_members')
-    .select('company_id')
-    .eq('user_id', user.id)
-    .limit(1)
-    .maybeSingle()
-
-  if (!membership) {
-    redirect('/onboarding')
-  }
+  const { companyId, role } = await getCompanyContext(supabase, user)
+  if (!canWrite(role)) return { error: READ_ONLY_ERROR }
 
   const { data: transactionToDelete } = await supabase
     .from('transactions')
     .select('id, type, amount')
     .eq('id', transactionId)
-    .eq('company_id', membership.company_id)
+    .eq('company_id', companyId)
     .limit(1)
     .maybeSingle()
 
@@ -132,14 +118,14 @@ export async function deleteTransaction(transactionId: string) {
     .from('transactions')
     .delete()
     .eq('id', transactionId)
-    .eq('company_id', membership.company_id)
+    .eq('company_id', companyId)
 
   if (deleteError) {
-    return { error: 'Could not delete transaction. Please try again.' }
+    return { error: deleteError?.message || 'Could not delete transaction. Please try again.' }
   }
 
   await logAudit({
-    companyId: membership.company_id,
+    companyId,
     userId: user.id,
     action: 'deleted',
     entityType: 'transaction',

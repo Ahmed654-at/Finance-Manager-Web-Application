@@ -2,12 +2,10 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import DeleteConfirmButton from '../components/DeleteConfirmButton'
 import { createClient } from '@/lib/supabase/server'
-import { createBudget, deleteBudget } from './actions'
-
-async function handleCreateBudget(formData: FormData) {
-  'use server'
-  await createBudget(formData)
-}
+import { getCompanyContext, ensureDefaultCategories } from '@/lib/company'
+import { formatCurrency } from '@/lib/currency'
+import { deleteBudget } from './actions'
+import BudgetCreateForm from './BudgetCreateForm'
 
 export default async function BudgetsPage() {
   const supabase = await createClient()
@@ -20,18 +18,10 @@ export default async function BudgetsPage() {
     redirect('/login')
   }
 
-  const { data: membership } = await supabase
-    .from('company_members')
-    .select('company_id')
-    .eq('user_id', user.id)
-    .limit(1)
-    .maybeSingle()
+  const { companyId, company } = await getCompanyContext(supabase, user)
 
-  if (!membership) {
-    redirect('/onboarding')
-  }
-
-  const companyId = membership.company_id
+  // Ensure standard company expense categories (Marketing, Employees Salaries, Team Travelling, Team Lunch, etc.) exist
+  await ensureDefaultCategories(supabase, companyId)
 
   const { data: expenseCategoriesResult } = await supabase
     .from('categories')
@@ -80,7 +70,12 @@ export default async function BudgetsPage() {
       <div className="mx-auto max-w-5xl">
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
           <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <h1 className="text-2xl font-semibold text-slate-900">Budgets</h1>
+            <div>
+              <h1 className="text-2xl font-semibold text-slate-900">Budgets & Expense Limits</h1>
+              <p className="mt-1 text-sm text-slate-500">
+                Track limits for Marketing, Employees Salaries, Team Travelling, Team Lunch, and operations.
+              </p>
+            </div>
             <Link
               href="/dashboard"
               className="text-sm font-medium text-slate-600 transition hover:text-slate-900"
@@ -89,105 +84,7 @@ export default async function BudgetsPage() {
             </Link>
           </div>
 
-          <form
-            action={handleCreateBudget}
-            className="mb-8 space-y-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 shadow-sm"
-          >
-            <div>
-              <label htmlFor="name" className="block text-sm font-medium text-slate-700">
-                Budget name
-              </label>
-              <input
-                id="name"
-                name="name"
-                type="text"
-                required
-                placeholder="Marketing budget"
-                className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-500 focus:outline-none"
-              />
-            </div>
-
-            <div>
-              <label htmlFor="category_id" className="block text-sm font-medium text-slate-700">
-                Category
-              </label>
-              <select
-                id="category_id"
-                name="category_id"
-                required
-                defaultValue=""
-                className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-500 focus:outline-none"
-              >
-                {expenseCategories.length === 0 ? (
-                  <option value="" disabled>
-                    No expense categories available
-                  </option>
-                ) : (
-                  <>
-                    <option value="" disabled>
-                      Select an expense category
-                    </option>
-                    {expenseCategories.map((category) => (
-                      <option key={category.id} value={category.id}>
-                        {category.name}
-                      </option>
-                    ))}
-                  </>
-                )}
-              </select>
-            </div>
-
-            <div className="grid gap-4 md:grid-cols-2">
-              <div>
-                <label htmlFor="amount" className="block text-sm font-medium text-slate-700">
-                  Amount
-                </label>
-                <input
-                  id="amount"
-                  name="amount"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  required
-                  placeholder="0.00"
-                  className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-500 focus:outline-none"
-                />
-              </div>
-
-              <div>
-                <label htmlFor="start_date" className="block text-sm font-medium text-slate-700">
-                  Start date
-                </label>
-                <input
-                  id="start_date"
-                  name="start_date"
-                  type="date"
-                  required
-                  className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-500 focus:outline-none"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label htmlFor="end_date" className="block text-sm font-medium text-slate-700">
-                End date
-              </label>
-              <input
-                id="end_date"
-                name="end_date"
-                type="date"
-                required
-                className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-500 focus:outline-none"
-              />
-            </div>
-
-            <button
-              type="submit"
-              className="w-full rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-slate-800"
-            >
-              Add budget
-            </button>
-          </form>
+          <BudgetCreateForm categories={expenseCategories} currency={company.currency} />
 
           {budgetsWithSpend.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-6 py-10 text-center">
@@ -214,6 +111,18 @@ export default async function BudgetsPage() {
                   labelClasses = 'text-amber-700'
                 }
 
+                const catName = budget.categories?.name || 'Uncategorized'
+                let catBadgeClass = 'bg-slate-100 text-slate-700 border-slate-200'
+                if (catName.toLowerCase().includes('marketing')) {
+                  catBadgeClass = 'bg-blue-50 text-blue-700 border-blue-200'
+                } else if (catName.toLowerCase().includes('salar')) {
+                  catBadgeClass = 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                } else if (catName.toLowerCase().includes('travell') || catName.toLowerCase().includes('travel')) {
+                  catBadgeClass = 'bg-purple-50 text-purple-700 border-purple-200'
+                } else if (catName.toLowerCase().includes('lunch') || catName.toLowerCase().includes('meal')) {
+                  catBadgeClass = 'bg-amber-50 text-amber-700 border-amber-200'
+                }
+
                 return (
                   <div
                     key={budget.id}
@@ -222,7 +131,11 @@ export default async function BudgetsPage() {
                     <div className="mb-2 flex items-center justify-between gap-3">
                       <div>
                         <h3 className="text-lg font-semibold text-slate-900">{budget.name}</h3>
-                        <p className="text-sm text-slate-600">{budget.categories?.name || 'Uncategorized'}</p>
+                        <div className="mt-1 flex items-center gap-2">
+                          <span className={`inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-medium ${catBadgeClass}`}>
+                            🏷️ {catName}
+                          </span>
+                        </div>
                       </div>
                       <div className="flex items-center gap-2">
                         <Link
@@ -253,10 +166,10 @@ export default async function BudgetsPage() {
 
                     <div className="mt-3 text-sm text-slate-700">
                       <span className={`font-medium ${labelClasses}`}>
-                        ${actualSpend.toFixed(2)}
+                        {formatCurrency(actualSpend, company.currency)}
                       </span>
                       {' spent of '}
-                      <span className="font-medium text-slate-900">${budgetAmount.toFixed(2)}</span>
+                      <span className="font-medium text-slate-900">{formatCurrency(budgetAmount, company.currency)}</span>
                     </div>
                   </div>
                 )

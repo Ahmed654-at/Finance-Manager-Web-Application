@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { getCompanyContext } from '@/lib/company'
 import TransactionForm from './TransactionForm'
 
 type Category = {
@@ -25,27 +26,18 @@ export default async function NewTransactionPage() {
     redirect('/login')
   }
 
-  const { data: membership } = await supabase
-    .from('company_members')
-    .select('company_id')
-    .eq('user_id', user.id)
-    .limit(1)
-    .maybeSingle()
-
-  if (!membership) {
-    redirect('/onboarding')
-  }
+  const { companyId } = await getCompanyContext(supabase, user)
 
   const { data: categories } = await supabase
     .from('categories')
     .select('*')
-    .eq('company_id', membership.company_id)
+    .eq('company_id', companyId)
     .order('name')
 
   const { data: accounts } = await supabase
     .from('accounts')
     .select('*')
-    .eq('company_id', membership.company_id)
+    .eq('company_id', companyId)
     .order('name')
 
   return (

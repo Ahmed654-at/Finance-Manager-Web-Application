@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation'
 import { logAudit } from '@/lib/audit'
 import { sendInvoiceEmail } from '@/lib/email'
 import { createClient } from '@/lib/supabase/server'
+import { getCompanyContext, canWrite, READ_ONLY_ERROR } from '@/lib/company'
 import { buildInvoicePdfBuffer } from './pdf/route'
 
 const VALID_STATUSES = ['draft', 'sent', 'paid', 'overdue', 'cancelled'] as const
@@ -31,22 +32,14 @@ export async function updateInvoice(invoiceId: string, formData: FormData) {
     redirect('/login')
   }
 
-  const { data: membership } = await supabase
-    .from('company_members')
-    .select('company_id')
-    .eq('user_id', user.id)
-    .limit(1)
-    .maybeSingle()
-
-  if (!membership) {
-    redirect('/onboarding')
-  }
+  const { companyId, role } = await getCompanyContext(supabase, user)
+  if (!canWrite(role)) return { error: READ_ONLY_ERROR }
 
   const { data: invoice, error: invoiceLookupError } = await supabase
     .from('invoices')
     .select('id, company_id, status, invoice_number')
     .eq('id', invoiceId)
-    .eq('company_id', membership.company_id)
+    .eq('company_id', companyId)
     .limit(1)
     .maybeSingle()
 
@@ -102,63 +95,35 @@ export async function updateInvoice(invoiceId: string, formData: FormData) {
     }
   }
 
-  const subtotal = validLineItems.reduce(
-    (sum, item) => sum + Number(item.quantity) * Number(item.unit_price),
-    0,
-  )
-  const total = subtotal + Number(rawTax)
-
-  const { error: updateError } = await supabase
-    .from('invoices')
-    .update({
-      customer_id: customerId,
-      invoice_number: invoiceNumber,
-      issue_date: issueDate || new Date().toISOString().slice(0, 10),
-      due_date: dueDate || null,
-      subtotal,
-      tax: Number(rawTax),
-      total,
-      notes: notes || null,
-    })
-    .eq('id', invoiceId)
-    .eq('company_id', membership.company_id)
-
-  if (updateError) {
-    return { error: 'Could not update invoice. Please try again.' }
+  if (rawTax < 0) {
+    return { error: 'Tax cannot be negative.' }
   }
 
-  const { error: clearItemsError } = await supabase
-    .from('invoice_items')
-    .delete()
-    .eq('invoice_id', invoiceId)
+  // Invoice and line items are saved in a single database transaction (migrations/002_save_invoice.sql).
+  const { data: saved, error: saveError } = await supabase.rpc('save_invoice', {
+    p_invoice_id: invoiceId,
+    p_company_id: companyId,
+    p_customer_id: customerId,
+    p_invoice_number: invoiceNumber,
+    p_service_type: null,
+    p_issue_date: issueDate || new Date().toISOString().slice(0, 10),
+    p_due_date: dueDate || null,
+    p_notes: notes || null,
+    p_tax: rawTax,
+    p_items: validLineItems,
+  })
 
-  if (clearItemsError) {
-    return { error: 'Could not update invoice line items. Please try again.' }
-  }
-
-  const itemsToInsert = validLineItems.map((item) => ({
-    invoice_id: invoiceId,
-    description: item.description,
-    quantity: Number(item.quantity),
-    unit_price: Number(item.unit_price),
-    amount: Number(item.quantity) * Number(item.unit_price),
-  }))
-
-  if (itemsToInsert.length > 0) {
-    const { error: insertItemsError } = await supabase.from('invoice_items').insert(itemsToInsert)
-
-    if (insertItemsError) {
-      return { error: 'Could not save invoice line items. Please try again.' }
-    }
+  if (saveError || !saved?.id) {
+    return { error: saveError?.message || 'Could not update invoice. Please try again.' }
   }
 
   await logAudit({
-    companyId: membership.company_id,
+    companyId,
     userId: user.id,
     action: 'updated',
     entityType: 'invoice',
     entityId: invoiceId,
-    summary: `Updated invoice ${invoiceNumber} for ${total}`,
+    summary: `Updated invoice ${invoiceNumber} for ${saved.total}`,
   })
 
   revalidatePath('/dashboard/invoices')
@@ -182,22 +147,14 @@ export async function deleteInvoice(invoiceId: string) {
     redirect('/login')
   }
 
-  const { data: membership } = await supabase
-    .from('company_members')
-    .select('company_id')
-    .eq('user_id', user.id)
-    .limit(1)
-    .maybeSingle()
-
-  if (!membership) {
-    redirect('/onboarding')
-  }
+  const { companyId, role } = await getCompanyContext(supabase, user)
+  if (!canWrite(role)) return { error: READ_ONLY_ERROR }
 
   const { data: invoiceToDelete } = await supabase
     .from('invoices')
     .select('id, invoice_number')
     .eq('id', invoiceId)
-    .eq('company_id', membership.company_id)
+    .eq('company_id', companyId)
     .limit(1)
     .maybeSingle()
 
@@ -215,14 +172,14 @@ export async function deleteInvoice(invoiceId: string) {
     .from('invoices')
     .delete()
     .eq('id', invoiceId)
-    .eq('company_id', membership.company_id)
+    .eq('company_id', companyId)
 
   if (deleteError) {
-    return { error: 'Could not delete invoice. Please try again.' }
+    return { error: deleteError?.message || 'Could not delete invoice. Please try again.' }
   }
 
   await logAudit({
-    companyId: membership.company_id,
+    companyId,
     userId: user.id,
     action: 'deleted',
     entityType: 'invoice',
@@ -250,22 +207,14 @@ export async function sendInvoiceToCustomer(invoiceId: string) {
     return { error: 'You must be logged in to send invoices.' }
   }
 
-  const { data: membership } = await supabase
-    .from('company_members')
-    .select('company_id')
-    .eq('user_id', user.id)
-    .limit(1)
-    .maybeSingle()
-
-  if (!membership) {
-    return { error: 'Your company membership could not be found.' }
-  }
+  const { companyId, company, role } = await getCompanyContext(supabase, user)
+  if (!canWrite(role)) return { error: READ_ONLY_ERROR }
 
   const { data: invoice, error: invoiceLookupError } = await supabase
     .from('invoices')
     .select('*, customers(name, email)')
     .eq('id', invoiceId)
-    .eq('company_id', membership.company_id)
+    .eq('company_id', companyId)
     .maybeSingle()
 
   if (invoiceLookupError || !invoice) {
@@ -277,12 +226,6 @@ export async function sendInvoiceToCustomer(invoiceId: string) {
   if (!customerEmail) {
     return { error: 'This customer has no email address on file.' }
   }
-
-  const { data: company } = await supabase
-    .from('companies')
-    .select('name')
-    .eq('id', membership.company_id)
-    .maybeSingle()
 
   const { data: items } = await supabase
     .from('invoice_items')
@@ -314,7 +257,7 @@ export async function sendInvoiceToCustomer(invoiceId: string) {
     })),
   })
 
-  await sendInvoiceEmail({
+  const emailResult = await sendInvoiceEmail({
     to: customerEmail,
     customerName: invoice.customers?.name || 'Customer',
     companyName: company?.name || 'Finance Manager',
@@ -323,7 +266,16 @@ export async function sendInvoiceToCustomer(invoiceId: string) {
     dueDate: invoice.due_date,
     pdfBuffer,
     type: 'sent',
+    currency: company?.currency,
   })
+
+  if (!emailResult.success) {
+    return {
+      error:
+        emailResult.error ||
+        'Failed to deliver invoice email. Please check your Resend configuration.',
+    }
+  }
 
   const nextStatus = invoice.status === 'paid' ? invoice.status : 'sent'
 
@@ -332,7 +284,7 @@ export async function sendInvoiceToCustomer(invoiceId: string) {
       .from('invoices')
       .update({ status: nextStatus })
       .eq('id', invoiceId)
-      .eq('company_id', membership.company_id)
+      .eq('company_id', companyId)
 
     if (statusError) {
       return { error: 'Could not update invoice status.' }
@@ -340,7 +292,7 @@ export async function sendInvoiceToCustomer(invoiceId: string) {
   }
 
   await logAudit({
-    companyId: membership.company_id,
+    companyId,
     userId: user.id,
     action: nextStatus !== invoice.status ? 'status_changed' : 'sent',
     entityType: 'invoice',
@@ -374,22 +326,14 @@ export async function updateInvoiceStatus(invoiceId: string, newStatus: string) 
     return { error: 'You must be logged in to update invoices.' }
   }
 
-  const { data: membership } = await supabase
-    .from('company_members')
-    .select('company_id')
-    .eq('user_id', user.id)
-    .limit(1)
-    .maybeSingle()
-
-  if (!membership) {
-    return { error: 'Your company membership could not be found.' }
-  }
+  const { companyId, company, role } = await getCompanyContext(supabase, user)
+  if (!canWrite(role)) return { error: READ_ONLY_ERROR }
 
   const { error: updateError } = await supabase
     .from('invoices')
     .update({ status: newStatus })
     .eq('id', invoiceId)
-    .eq('company_id', membership.company_id)
+    .eq('company_id', companyId)
 
   if (updateError) {
     return { error: 'Could not update invoice status.' }
@@ -401,18 +345,13 @@ export async function updateInvoiceStatus(invoiceId: string, newStatus: string) 
         .from('invoices')
         .select('*, customers(name, email)')
         .eq('id', invoiceId)
-        .eq('company_id', membership.company_id)
+        .eq('company_id', companyId)
         .maybeSingle()
 
       if (!invoiceDataError && invoiceData) {
         const customerEmail = invoiceData.customers?.email?.trim()
 
         if (customerEmail) {
-          const { data: company } = await supabase
-            .from('companies')
-            .select('name')
-            .eq('id', membership.company_id)
-            .maybeSingle()
 
           const { data: items } = await supabase
             .from('invoice_items')
@@ -453,6 +392,7 @@ export async function updateInvoiceStatus(invoiceId: string, newStatus: string) 
             dueDate: invoiceData.due_date,
             pdfBuffer,
             type: 'paid',
+            currency: company?.currency,
           })
         }
       }
@@ -462,7 +402,7 @@ export async function updateInvoiceStatus(invoiceId: string, newStatus: string) 
   }
 
   await logAudit({
-    companyId: membership.company_id,
+    companyId,
     userId: user.id,
     action: 'status_changed',
     entityType: 'invoice',

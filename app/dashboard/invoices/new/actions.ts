@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { logAudit } from '@/lib/audit'
 import { createClient } from '@/lib/supabase/server'
+import { getCompanyContext, canWrite, READ_ONLY_ERROR } from '@/lib/company'
 
 type InvoiceLineItem = {
   description: string
@@ -23,16 +24,8 @@ export async function createInvoice(formData: FormData) {
     redirect('/login')
   }
 
-  const { data: membership } = await supabase
-    .from('company_members')
-    .select('company_id')
-    .eq('user_id', user.id)
-    .limit(1)
-    .maybeSingle()
-
-  if (!membership) {
-    redirect('/onboarding')
-  }
+  const { companyId, role } = await getCompanyContext(supabase, user)
+  if (!canWrite(role)) return { error: READ_ONLY_ERROR }
 
   const customerId = String(formData.get('customer_id') ?? '').trim()
   const invoiceNumber = String(formData.get('invoice_number') ?? '').trim()
@@ -40,6 +33,7 @@ export async function createInvoice(formData: FormData) {
   const dueDate = String(formData.get('due_date') ?? '').trim()
   const notes = String(formData.get('notes') ?? '').trim()
   const rawTax = Number(String(formData.get('tax') ?? '0')) || 0
+  const serviceType = String(formData.get('service_type') ?? 'ai_service').trim()
 
   if (!customerId) {
     return { error: 'Please select a customer.' }
@@ -78,52 +72,35 @@ export async function createInvoice(formData: FormData) {
     }
   }
 
-  const subtotal = validLineItems.reduce(
-    (sum, item) => sum + Number(item.quantity) * Number(item.unit_price),
-    0,
-  )
-  const total = subtotal + Number(rawTax)
-
-  const { data: invoice, error: invoiceError } = await supabase
-    .from('invoices')
-    .insert({
-      company_id: membership.company_id,
-      customer_id: customerId,
-      invoice_number: invoiceNumber,
-      issue_date: issueDate || new Date().toISOString().slice(0, 10),
-      due_date: dueDate || null,
-      subtotal,
-      tax: Number(rawTax),
-      total,
-      status: 'draft',
-      notes: notes || null,
-    })
-    .select('id')
-    .single()
-
-  if (invoiceError || !invoice?.id) {
-    return { error: 'Could not create invoice. Please try again.' }
+  if (rawTax < 0) {
+    return { error: 'Tax cannot be negative.' }
   }
 
-  const itemsToInsert = validLineItems.map((item) => ({
-    invoice_id: invoice.id,
-    description: item.description,
-    quantity: Number(item.quantity),
-    unit_price: Number(item.unit_price),
-    amount: Number(item.quantity) * Number(item.unit_price),
-  }))
+  // Invoice and line items are saved in a single database transaction (migrations/002_save_invoice.sql).
+  const { data: saved, error: saveError } = await supabase.rpc('save_invoice', {
+    p_invoice_id: null,
+    p_company_id: companyId,
+    p_customer_id: customerId,
+    p_invoice_number: invoiceNumber,
+    p_service_type: serviceType,
+    p_issue_date: issueDate || new Date().toISOString().slice(0, 10),
+    p_due_date: dueDate || null,
+    p_notes: notes || null,
+    p_tax: rawTax,
+    p_items: validLineItems,
+  })
 
-  for (const item of itemsToInsert) {
-    await supabase.from('invoice_items').insert(item)
+  if (saveError || !saved?.id) {
+    return { error: saveError?.message || 'Could not create invoice. Please try again.' }
   }
 
   await logAudit({
-    companyId: membership.company_id,
+    companyId,
     userId: user.id,
     action: 'created',
     entityType: 'invoice',
-    entityId: invoice.id,
-    summary: `Created invoice ${invoiceNumber} for ${total}`,
+    entityId: saved.id,
+    summary: `Created invoice ${invoiceNumber} for ${saved.total}`,
   })
 
   revalidatePath('/dashboard/invoices')

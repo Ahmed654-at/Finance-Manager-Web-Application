@@ -1,34 +1,18 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { getCompanyContext } from '@/lib/company'
+import { formatCurrency } from '@/lib/currency'
 import DeleteConfirmButton from '../components/DeleteConfirmButton'
 import { deleteTransaction } from './[id]/edit/actions'
 import { importTransactionsCsv } from './import/actions'
 
-type SearchParamsValue = string | string[] | undefined
-
-type SearchParams = Record<string, SearchParamsValue>
-
-type Category = {
-  id: string
-  name: string
-}
-
-type Account = {
-  id: string
-  name: string
-}
+type SearchParams = Record<string, string | string[] | undefined>
 
 async function handleImportCsv(formData: FormData) {
   'use server'
   await importTransactionsCsv(formData)
-  return
 }
-
-const currencyFormatter = new Intl.NumberFormat('en-US', {
-  style: 'currency',
-  currency: 'USD',
-})
 
 export default async function TransactionsPage({
   searchParams,
@@ -62,18 +46,7 @@ export default async function TransactionsPage({
     redirect('/login')
   }
 
-  const { data: membership } = await supabase
-    .from('company_members')
-    .select('company_id')
-    .eq('user_id', user.id)
-    .limit(1)
-    .maybeSingle()
-
-  if (!membership) {
-    redirect('/onboarding')
-  }
-
-  const companyId = membership.company_id
+  const { companyId, company } = await getCompanyContext(supabase, user)
 
   const { data: categories } = await supabase
     .from('categories')
@@ -344,6 +317,8 @@ export default async function TransactionsPage({
                     const categoryName = transaction.categories?.name || 'Uncategorized'
                     const accountName = transaction.accounts?.name || '—'
 
+                    const tx = transaction as { revenue_stream?: string | null; expense_type?: string | null }
+
                     return (
                       <tr key={transaction.id} className="border-b border-slate-100 text-sm text-slate-700 last:border-b-0">
                         <td className="py-3 pr-4">{transaction.transaction_date || '—'}</td>
@@ -351,16 +326,33 @@ export default async function TransactionsPage({
                         <td className="py-3 pr-4">{accountName}</td>
                         <td className="py-3 pr-4">{transaction.description || '—'}</td>
                         <td className={`py-3 pr-4 font-medium ${isIncome ? 'text-emerald-600' : 'text-red-600'}`}>
-                          {isIncome ? '+' : '-'}{currencyFormatter.format(Math.abs(amount))}
+                          {isIncome ? '+' : '-'}{formatCurrency(Math.abs(amount), company.currency)}
                         </td>
                         <td className="py-3 pr-4">
-                          <span
-                            className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium capitalize ${
-                              isIncome ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'
-                            }`}
-                          >
-                            {transaction.type}
-                          </span>
+                          <div className="flex flex-col gap-1 items-start">
+                            <span
+                              className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${
+                                isIncome ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'
+                              }`}
+                            >
+                              {transaction.type}
+                            </span>
+                            {tx.revenue_stream === 'ai_services' && (
+                              <span className="text-[11px] text-slate-500 font-medium">AI Service</span>
+                            )}
+                            {tx.revenue_stream === 'product_sales' && (
+                              <span className="text-[11px] text-slate-500 font-medium">Product</span>
+                            )}
+                            {tx.expense_type === 'salary' && (
+                              <span className="text-[11px] text-slate-500 font-medium">Salary</span>
+                            )}
+                            {tx.expense_type === 'team_expense' && (
+                              <span className="text-[11px] text-slate-500 font-medium">Team Claim</span>
+                            )}
+                            {tx.expense_type === 'infrastructure' && (
+                              <span className="text-[11px] text-slate-500 font-medium">GPU / API</span>
+                            )}
+                          </div>
                         </td>
                         <td className="py-3">
                           <div className="flex items-center gap-2">

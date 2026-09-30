@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { getCompanyContext, canWrite, READ_ONLY_ERROR } from '@/lib/company'
 
 function parseCsvLine(line: string) {
   const values: string[] = []
@@ -47,18 +48,8 @@ export async function importTransactionsCsv(formData: FormData) {
     redirect('/login')
   }
 
-  const { data: membership } = await supabase
-    .from('company_members')
-    .select('company_id')
-    .eq('user_id', user.id)
-    .limit(1)
-    .maybeSingle()
-
-  if (!membership) {
-    redirect('/onboarding')
-  }
-
-  const companyId = membership.company_id
+  const { companyId, role } = await getCompanyContext(supabase, user)
+  if (!canWrite(role)) return { error: READ_ONLY_ERROR }
   const file = formData.get('file')
 
   if (!(file instanceof File)) {

@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { logAudit } from '@/lib/audit'
 import { createClient } from '@/lib/supabase/server'
+import { getCompanyContext, canWrite, READ_ONLY_ERROR } from '@/lib/company'
 import { checkBudgetAlerts } from '../../notifications/actions'
 
 export async function createTransaction(formData: FormData) {
@@ -18,16 +19,8 @@ export async function createTransaction(formData: FormData) {
     redirect('/login')
   }
 
-  const { data: membership } = await supabase
-    .from('company_members')
-    .select('company_id')
-    .eq('user_id', user.id)
-    .limit(1)
-    .maybeSingle()
-
-  if (!membership) {
-    redirect('/onboarding')
-  }
+  const { companyId, role } = await getCompanyContext(supabase, user)
+  if (!canWrite(role)) return { error: READ_ONLY_ERROR }
 
   const type = String(formData.get('type') ?? '').trim()
   const amountValue = Number(formData.get('amount'))
@@ -38,6 +31,9 @@ export async function createTransaction(formData: FormData) {
   const categoryId = rawCategoryId && String(rawCategoryId).trim() !== '' ? String(rawCategoryId) : null
   const rawAccountId = formData.get('account_id')
   const accountId = rawAccountId && String(rawAccountId).trim() !== '' ? String(rawAccountId) : null
+
+  const revenueStream = type === 'income' ? ((formData.get('revenue_stream') as string | null) || 'ai_services') : null
+  const expenseType = type === 'expense' ? ((formData.get('expense_type') as string | null) || 'operational') : null
 
   if (!['income', 'expense'].includes(type)) {
     return { error: 'Please select a valid transaction type.' }
@@ -54,11 +50,13 @@ export async function createTransaction(formData: FormData) {
   const { data: transaction, error: insertError } = await supabase
     .from('transactions')
     .insert({
-      company_id: membership.company_id,
+      company_id: companyId,
       type,
       amount: amountValue,
       category_id: categoryId,
       account_id: accountId,
+      revenue_stream: revenueStream,
+      expense_type: expenseType,
       description: description || null,
       transaction_date: transactionDate,
       reference: reference || null,
@@ -68,11 +66,23 @@ export async function createTransaction(formData: FormData) {
     .single()
 
   if (insertError || !transaction?.id) {
-    return { error: 'Could not create transaction. Please try again.' }
+    console.error('Create transaction error:', insertError)
+    return { error: insertError?.message || 'Could not create transaction. Please try again.' }
+  }
+
+  if (accountId) {
+    const { data: acc } = await supabase.from('accounts').select('opening_balance').eq('id', accountId).single()
+    if (acc) {
+      const delta = type === 'income' ? amountValue : -amountValue
+      await supabase
+        .from('accounts')
+        .update({ opening_balance: Number(acc.opening_balance || 0) + delta })
+        .eq('id', accountId)
+    }
   }
 
   await logAudit({
-    companyId: membership.company_id,
+    companyId,
     userId: user.id,
     action: 'created',
     entityType: 'transaction',
@@ -81,9 +91,10 @@ export async function createTransaction(formData: FormData) {
   })
 
   if (type === 'expense' && categoryId) {
-    await checkBudgetAlerts(membership.company_id, categoryId)
+    await checkBudgetAlerts(companyId, categoryId)
   }
 
   revalidatePath('/dashboard')
-  redirect('/dashboard')
+  revalidatePath('/dashboard/transactions')
+  redirect('/dashboard/transactions')
 }

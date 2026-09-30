@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { logAudit } from '@/lib/audit'
 import { createClient } from '@/lib/supabase/server'
+import { getCompanyContext, canWrite, READ_ONLY_ERROR } from '@/lib/company'
 
 export async function createCustomer(formData: FormData) {
   const supabase = await createClient()
@@ -17,16 +18,8 @@ export async function createCustomer(formData: FormData) {
     redirect('/login')
   }
 
-  const { data: membership } = await supabase
-    .from('company_members')
-    .select('company_id')
-    .eq('user_id', user.id)
-    .limit(1)
-    .maybeSingle()
-
-  if (!membership) {
-    redirect('/onboarding')
-  }
+  const { companyId, role } = await getCompanyContext(supabase, user)
+  if (!canWrite(role)) return { error: READ_ONLY_ERROR }
 
   const name = String(formData.get('name') ?? '').trim()
   const email = String(formData.get('email') ?? '').trim()
@@ -40,7 +33,7 @@ export async function createCustomer(formData: FormData) {
   const { data: customer, error: insertError } = await supabase
     .from('customers')
     .insert({
-      company_id: membership.company_id,
+      company_id: companyId,
       name,
       email: email || null,
       phone: phone || null,
@@ -50,11 +43,11 @@ export async function createCustomer(formData: FormData) {
     .single()
 
   if (insertError || !customer?.id) {
-    return { error: 'Could not create customer. Please try again.' }
+    return { error: insertError?.message || 'Could not create customer. Please try again.' }
   }
 
   await logAudit({
-    companyId: membership.company_id,
+    companyId,
     userId: user.id,
     action: 'created',
     entityType: 'customer',
@@ -78,16 +71,8 @@ export async function updateCustomer(customerId: string, formData: FormData) {
     redirect('/login')
   }
 
-  const { data: membership } = await supabase
-    .from('company_members')
-    .select('company_id')
-    .eq('user_id', user.id)
-    .limit(1)
-    .maybeSingle()
-
-  if (!membership) {
-    redirect('/onboarding')
-  }
+  const { companyId, role } = await getCompanyContext(supabase, user)
+  if (!canWrite(role)) return { error: READ_ONLY_ERROR }
 
   const name = String(formData.get('name') ?? '').trim()
   const email = String(formData.get('email') ?? '').trim()
@@ -107,14 +92,14 @@ export async function updateCustomer(customerId: string, formData: FormData) {
       address: address || null,
     })
     .eq('id', customerId)
-    .eq('company_id', membership.company_id)
+    .eq('company_id', companyId)
 
   if (updateError) {
-    return { error: 'Could not update customer. Please try again.' }
+    return { error: updateError?.message || 'Could not update customer. Please try again.' }
   }
 
   await logAudit({
-    companyId: membership.company_id,
+    companyId,
     userId: user.id,
     action: 'updated',
     entityType: 'customer',
@@ -138,21 +123,13 @@ export async function deleteCustomer(customerId: string) {
     redirect('/login')
   }
 
-  const { data: membership } = await supabase
-    .from('company_members')
-    .select('company_id')
-    .eq('user_id', user.id)
-    .limit(1)
-    .maybeSingle()
-
-  if (!membership) {
-    redirect('/onboarding')
-  }
+  const { companyId, role } = await getCompanyContext(supabase, user)
+  if (!canWrite(role)) return { error: READ_ONLY_ERROR }
 
   const { data: existingInvoice } = await supabase
     .from('invoices')
     .select('id')
-    .eq('company_id', membership.company_id)
+    .eq('company_id', companyId)
     .eq('customer_id', customerId)
     .limit(1)
     .maybeSingle()
@@ -167,7 +144,7 @@ export async function deleteCustomer(customerId: string) {
     .from('customers')
     .select('id, name')
     .eq('id', customerId)
-    .eq('company_id', membership.company_id)
+    .eq('company_id', companyId)
     .limit(1)
     .maybeSingle()
 
@@ -179,14 +156,14 @@ export async function deleteCustomer(customerId: string) {
     .from('customers')
     .delete()
     .eq('id', customerId)
-    .eq('company_id', membership.company_id)
+    .eq('company_id', companyId)
 
   if (deleteError) {
-    return { error: 'Could not delete customer. Please try again.' }
+    return { error: deleteError?.message || 'Could not delete customer. Please try again.' }
   }
 
   await logAudit({
-    companyId: membership.company_id,
+    companyId,
     userId: user.id,
     action: 'deleted',
     entityType: 'customer',

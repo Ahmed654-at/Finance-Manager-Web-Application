@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { getCompanyContext } from '@/lib/company'
 import InvoiceForm from './InvoiceForm'
 
 export default async function NewInvoicePage() {
@@ -13,24 +14,24 @@ export default async function NewInvoicePage() {
     redirect('/login')
   }
 
-  const { data: membership } = await supabase
-    .from('company_members')
-    .select('company_id')
-    .eq('user_id', user.id)
-    .limit(1)
-    .maybeSingle()
-
-  if (!membership) {
-    redirect('/onboarding')
-  }
+  const { companyId } = await getCompanyContext(supabase, user)
 
   const { data: customersResult } = await supabase
     .from('customers')
     .select('*')
-    .eq('company_id', membership.company_id)
+    .eq('company_id', companyId)
     .order('name')
 
   const customers = customersResult ?? []
+
+  const { data: offeringsResult } = await supabase
+    .from('services_and_products')
+    .select('id, name, type, price')
+    .eq('company_id', companyId)
+    .eq('is_active', true)
+    .order('name')
+
+  const offerings = offeringsResult ?? []
   const suggestedNumber = `INV-${Date.now()}`
 
   return (
@@ -47,7 +48,11 @@ export default async function NewInvoicePage() {
             </a>
           </div>
 
-          <InvoiceForm customers={customers} suggestedNumber={suggestedNumber} />
+          <InvoiceForm
+            customers={customers}
+            offerings={offerings}
+            suggestedNumber={suggestedNumber}
+          />
         </div>
       </div>
     </main>

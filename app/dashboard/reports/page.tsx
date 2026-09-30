@@ -1,11 +1,8 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-
-const currencyFormatter = new Intl.NumberFormat('en-US', {
-  style: 'currency',
-  currency: 'USD',
-})
+import { getCompanyContext } from '@/lib/company'
+import { formatCurrency } from '@/lib/currency'
 
 const formatDateInput = (date: Date) => date.toISOString().slice(0, 10)
 
@@ -40,18 +37,7 @@ export default async function ReportsPage({
     redirect('/login')
   }
 
-  const { data: membership } = await supabase
-    .from('company_members')
-    .select('company_id')
-    .eq('user_id', user.id)
-    .limit(1)
-    .maybeSingle()
-
-  if (!membership) {
-    redirect('/onboarding')
-  }
-
-  const companyId = membership.company_id
+  const { companyId, company } = await getCompanyContext(supabase, user)
 
   const { data: transactions } = await supabase
     .from('transactions')
@@ -103,6 +89,22 @@ export default async function ReportsPage({
     .reduce((sum, item) => sum + Number(item.amount || 0), 0)
 
   const netProfit = totalIncome - totalExpenses
+
+  const aiRevenueInRange = items
+    .filter((t) => t.type === 'income' && (t.revenue_stream === 'ai_services' || t.categories?.name?.toLowerCase().includes('ai')))
+    .reduce((sum, t) => sum + Number(t.amount || 0), 0)
+
+  const productRevenueInRange = items
+    .filter((t) => t.type === 'income' && (t.revenue_stream === 'product_sales' || t.categories?.name?.toLowerCase().includes('product')))
+    .reduce((sum, t) => sum + Number(t.amount || 0), 0)
+
+  const salaryExpensesInRange = items
+    .filter((t) => t.type === 'expense' && (t.expense_type === 'salary' || t.categories?.name?.toLowerCase().includes('salary')))
+    .reduce((sum, t) => sum + Number(t.amount || 0), 0)
+
+  const teamExpensesInRange = items
+    .filter((t) => t.type === 'expense' && (t.expense_type === 'team_expense' || t.categories?.name?.toLowerCase().includes('team')))
+    .reduce((sum, t) => sum + Number(t.amount || 0), 0)
 
   const dayDiff = Math.max(1, Math.ceil((new Date(to).getTime() - new Date(from).getTime()) / 86400000) + 1)
   const useMonthlyBuckets = dayDiff > 31
@@ -211,8 +213,34 @@ export default async function ReportsPage({
                 <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <h2 className="text-xl font-semibold text-slate-900">Profit & Loss</h2>
                   <p className={`text-2xl font-semibold ${netProfit >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-                    {netProfit >= 0 ? 'Net Profit' : 'Net Loss'}: {currencyFormatter.format(Math.abs(netProfit))}
+                    {netProfit >= 0 ? 'Net Profit' : 'Net Loss'}: {formatCurrency(Math.abs(netProfit), company.currency)}
                   </p>
+                </div>
+
+                <div className="mb-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                  <div className="rounded-xl border border-indigo-200 bg-white p-4 shadow-sm">
+                    <p className="text-xs font-semibold uppercase tracking-wider text-indigo-700">🤖 AI Services</p>
+                    <p className="mt-1 text-xl font-bold text-slate-900">{formatCurrency(aiRevenueInRange, company.currency)}</p>
+                    <p className="text-[11px] text-slate-500">Solutions & Consulting</p>
+                  </div>
+
+                  <div className="rounded-xl border border-emerald-200 bg-white p-4 shadow-sm">
+                    <p className="text-xs font-semibold uppercase tracking-wider text-emerald-700">📦 Product Selling</p>
+                    <p className="mt-1 text-xl font-bold text-slate-900">{formatCurrency(productRevenueInRange, company.currency)}</p>
+                    <p className="text-[11px] text-slate-500">Software & Licenses</p>
+                  </div>
+
+                  <div className="rounded-xl border border-purple-200 bg-white p-4 shadow-sm">
+                    <p className="text-xs font-semibold uppercase tracking-wider text-purple-700">👥 Staff Salaries</p>
+                    <p className="mt-1 text-xl font-bold text-slate-900">{formatCurrency(salaryExpensesInRange, company.currency)}</p>
+                    <p className="text-[11px] text-slate-500">Payroll disbursements</p>
+                  </div>
+
+                  <div className="rounded-xl border border-amber-200 bg-white p-4 shadow-sm">
+                    <p className="text-xs font-semibold uppercase tracking-wider text-amber-700">💳 Team Expenses</p>
+                    <p className="mt-1 text-xl font-bold text-slate-900">{formatCurrency(teamExpensesInRange, company.currency)}</p>
+                    <p className="text-[11px] text-slate-500">Claims & Reimbursements</p>
+                  </div>
                 </div>
 
                 <div className="grid gap-6 lg:grid-cols-2">
@@ -239,7 +267,7 @@ export default async function ReportsPage({
                             <tr key={row.name} className="border-b border-slate-100 text-sm text-slate-700 last:border-b-0">
                               <td className="px-4 py-3">{row.name}</td>
                               <td className="px-4 py-3 text-right font-medium text-emerald-600">
-                                {currencyFormatter.format(row.total)}
+                                {formatCurrency(row.total, company.currency)}
                               </td>
                             </tr>
                           ))
@@ -247,7 +275,7 @@ export default async function ReportsPage({
                         <tr className="bg-slate-50 text-sm font-semibold text-slate-900">
                           <td className="px-4 py-3">Total income</td>
                           <td className="px-4 py-3 text-right text-emerald-600">
-                            {currencyFormatter.format(totalIncome)}
+                            {formatCurrency(totalIncome, company.currency)}
                           </td>
                         </tr>
                       </tbody>
@@ -277,7 +305,7 @@ export default async function ReportsPage({
                             <tr key={row.name} className="border-b border-slate-100 text-sm text-slate-700 last:border-b-0">
                               <td className="px-4 py-3">{row.name}</td>
                               <td className="px-4 py-3 text-right font-medium text-red-600">
-                                {currencyFormatter.format(row.total)}
+                                {formatCurrency(row.total, company.currency)}
                               </td>
                             </tr>
                           ))
@@ -285,7 +313,7 @@ export default async function ReportsPage({
                         <tr className="bg-slate-50 text-sm font-semibold text-slate-900">
                           <td className="px-4 py-3">Total expenses</td>
                           <td className="px-4 py-3 text-right text-red-600">
-                            {currencyFormatter.format(totalExpenses)}
+                            {formatCurrency(totalExpenses, company.currency)}
                           </td>
                         </tr>
                       </tbody>
@@ -318,13 +346,13 @@ export default async function ReportsPage({
                           <tr key={row.period} className="border-b border-slate-100 text-sm text-slate-700 last:border-b-0">
                             <td className="px-4 py-3">{row.period}</td>
                             <td className="px-4 py-3 text-right text-emerald-600 font-medium">
-                              {currencyFormatter.format(row.income)}
+                              {formatCurrency(row.income, company.currency)}
                             </td>
                             <td className="px-4 py-3 text-right text-red-600 font-medium">
-                              {currencyFormatter.format(row.expense)}
+                              {formatCurrency(row.expense, company.currency)}
                             </td>
                             <td className={`px-4 py-3 text-right font-medium ${row.net >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-                              {currencyFormatter.format(row.net)}
+                              {formatCurrency(row.net, company.currency)}
                             </td>
                           </tr>
                         ))

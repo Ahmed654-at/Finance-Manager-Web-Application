@@ -1,6 +1,7 @@
 import { createElement } from 'react'
 import { Document, Page, StyleSheet, Text, View } from '@react-pdf/renderer'
 import { createClient } from '@/lib/supabase/server'
+import { getCompanyContext } from '@/lib/company'
 
 const styles = StyleSheet.create({
   page: {
@@ -281,18 +282,7 @@ export async function GET(
     return new Response('Unauthorized', { status: 401 })
   }
 
-  const { data: membership } = await supabase
-    .from('company_members')
-    .select('company_id')
-    .eq('user_id', user.id)
-    .limit(1)
-    .maybeSingle()
-
-  if (!membership) {
-    return new Response('Not found', { status: 404 })
-  }
-
-  const companyId = membership.company_id
+  const { companyId, company } = await getCompanyContext(supabase, user)
 
   const { data: invoice, error: invoiceError } = await supabase
     .from('invoices')
@@ -304,12 +294,6 @@ export async function GET(
   if (invoiceError || !invoice) {
     return new Response('Not found', { status: 404 })
   }
-
-  const { data: company } = await supabase
-    .from('companies')
-    .select('name')
-    .eq('id', companyId)
-    .maybeSingle()
 
   const { data: items } = await supabase
     .from('invoice_items')

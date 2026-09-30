@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { getCompanyContext } from '@/lib/company'
 import InvoiceEditForm from './InvoiceEditForm'
 
 export default async function EditInvoicePage({
@@ -21,22 +22,13 @@ export default async function EditInvoicePage({
     redirect('/login')
   }
 
-  const { data: membership } = await supabase
-    .from('company_members')
-    .select('company_id')
-    .eq('user_id', user.id)
-    .limit(1)
-    .maybeSingle()
-
-  if (!membership) {
-    redirect('/onboarding')
-  }
+  const { companyId } = await getCompanyContext(supabase, user)
 
   const { data: invoice } = await supabase
     .from('invoices')
     .select('*')
     .eq('id', id)
-    .eq('company_id', membership.company_id)
+    .eq('company_id', companyId)
     .limit(1)
     .maybeSingle()
 
@@ -69,7 +61,7 @@ export default async function EditInvoicePage({
   const { data: customersResult } = await supabase
     .from('customers')
     .select('*')
-    .eq('company_id', membership.company_id)
+    .eq('company_id', companyId)
     .order('name')
 
   const { data: lineItemsResult } = await supabase

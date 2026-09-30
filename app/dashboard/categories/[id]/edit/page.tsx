@@ -39,23 +39,10 @@ export default function EditCategoryPage() {
         return
       }
 
-      const { data: membership } = await supabase
-        .from('company_members')
-        .select('company_id')
-        .eq('user_id', user.id)
-        .limit(1)
-        .maybeSingle()
-
-      if (!membership) {
-        router.push('/onboarding')
-        return
-      }
-
       const { data: categoryData } = await supabase
         .from('categories')
         .select('*')
         .eq('id', id)
-        .eq('company_id', membership.company_id)
         .limit(1)
         .maybeSingle()
 
@@ -180,7 +167,9 @@ export default function EditCategoryPage() {
 
           <div className="mt-4">
             <DeleteConfirmButton
-              action={deleteCategory.bind(null, id)}
+              action={async () => {
+                await deleteCategory(id)
+              }}
               label="Delete"
               confirmText="Delete this category?"
               className="w-full rounded-lg border border-red-300 bg-red-50 px-4 py-2.5 text-sm font-medium text-red-700 transition hover:border-red-400 hover:bg-red-100"

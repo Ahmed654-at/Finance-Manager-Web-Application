@@ -1,6 +1,8 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { getCompanyContext } from '@/lib/company'
+import { formatCurrency } from '@/lib/currency'
 import { createAccount } from './actions'
 
 type Account = {
@@ -26,18 +28,7 @@ export default async function AccountsPage() {
     redirect('/login')
   }
 
-  const { data: membership } = await supabase
-    .from('company_members')
-    .select('company_id')
-    .eq('user_id', user.id)
-    .limit(1)
-    .maybeSingle()
-
-  if (!membership) {
-    redirect('/onboarding')
-  }
-
-  const companyId = membership.company_id
+  const { companyId, company } = await getCompanyContext(supabase, user)
 
   const { data: accountsResult } = await supabase
     .from('accounts')
@@ -75,7 +66,10 @@ export default async function AccountsPage() {
       <div className="mx-auto max-w-4xl">
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
           <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <h1 className="text-2xl font-semibold text-slate-900">Accounts</h1>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">{company.name}</p>
+              <h1 className="text-2xl font-semibold text-slate-900">Accounts</h1>
+            </div>
             <Link
               href="/dashboard"
               className="text-sm font-medium text-slate-600 transition hover:text-slate-900"
@@ -165,7 +159,7 @@ export default async function AccountsPage() {
                     <p
                       className={`text-lg font-semibold ${account.currentBalance < 0 ? 'text-red-600' : 'text-slate-900'}`}
                     >
-                      ${account.currentBalance.toFixed(2)}
+                      {formatCurrency(account.currentBalance, company.currency)}
                     </p>
                   </div>
                 </div>

@@ -48,3 +48,5 @@ next-env.d.ts
 RETICLE.md
 AGENTS.md
 CLAUDE.md
+# local tool settings
+.claude/

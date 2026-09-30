@@ -1,11 +1,8 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-
-const currencyFormatter = new Intl.NumberFormat('en-US', {
-  style: 'currency',
-  currency: 'USD',
-})
+import { getCompanyContext } from '@/lib/company'
+import { formatCurrency } from '@/lib/currency'
 
 const statusClasses: Record<string, string> = {
   draft: 'bg-slate-100 text-slate-700',
@@ -44,18 +41,7 @@ export default async function InvoicesPage() {
     redirect('/login')
   }
 
-  const { data: membership } = await supabase
-    .from('company_members')
-    .select('company_id')
-    .eq('user_id', user.id)
-    .limit(1)
-    .maybeSingle()
-
-  if (!membership) {
-    redirect('/onboarding')
-  }
-
-  const companyId = membership.company_id
+  const { companyId, company } = await getCompanyContext(supabase, user)
 
   const { data: invoicesResult, error: invoicesError } = await supabase
     .from('invoices')
@@ -116,18 +102,30 @@ export default async function InvoicesPage() {
                   {invoices.map((invoice) => (
                     <tr key={invoice.id} className="border-b border-slate-100 text-sm text-slate-700 last:border-b-0">
                       <td className="py-3 pr-4">
-                        <Link
-                          href={`/dashboard/invoices/${invoice.id}`}
-                          className="font-medium text-slate-900 transition hover:text-slate-600"
-                        >
-                          {invoice.invoice_number}
-                        </Link>
+                        <div className="flex items-center gap-2">
+                          <Link
+                            href={`/dashboard/invoices/${invoice.id}`}
+                            className="font-medium text-slate-900 transition hover:text-slate-600"
+                          >
+                            {invoice.invoice_number}
+                          </Link>
+                          {invoice.service_type === 'ai_service' && (
+                            <span className="inline-flex rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-semibold text-indigo-700">
+                              🤖 AI Service
+                            </span>
+                          )}
+                          {invoice.service_type === 'product_sale' && (
+                            <span className="inline-flex rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">
+                              📦 Product
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td className="py-3 pr-4">{invoice.customers?.name || 'Unknown customer'}</td>
                       <td className="py-3 pr-4">{formatDate(invoice.issue_date)}</td>
                       <td className="py-3 pr-4">{formatDate(invoice.due_date)}</td>
                       <td className="py-3 pr-4 font-medium text-slate-900">
-                        {currencyFormatter.format(Number(invoice.total || 0))}
+                        {formatCurrency(Number(invoice.total || 0), company.currency)}
                       </td>
                       <td className="py-3">
                         <span

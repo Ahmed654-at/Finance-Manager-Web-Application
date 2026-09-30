@@ -40,23 +40,10 @@ export default function EditCustomerPage() {
         return
       }
 
-      const { data: membership } = await supabase
-        .from('company_members')
-        .select('company_id')
-        .eq('user_id', user.id)
-        .limit(1)
-        .maybeSingle()
-
-      if (!membership) {
-        router.push('/onboarding')
-        return
-      }
-
       const { data: customerData } = await supabase
         .from('customers')
         .select('*')
         .eq('id', id)
-        .eq('company_id', membership.company_id)
         .limit(1)
         .maybeSingle()
 
@@ -192,7 +179,9 @@ export default function EditCustomerPage() {
 
           <div className="mt-4">
             <DeleteConfirmButton
-              action={deleteCustomer.bind(null, id)}
+              action={async () => {
+                await deleteCustomer(id)
+              }}
               label="Delete"
               confirmText="Delete this customer?"
               className="w-full rounded-lg border border-red-300 bg-red-50 px-4 py-2.5 text-sm font-medium text-red-700 transition hover:border-red-400 hover:bg-red-100"

@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { logAudit } from '@/lib/audit'
 import { createClient } from '@/lib/supabase/server'
+import { getCompanyContext, canWrite, READ_ONLY_ERROR } from '@/lib/company'
 
 export async function createAccount(formData: FormData) {
   const supabase = await createClient()
@@ -17,16 +18,8 @@ export async function createAccount(formData: FormData) {
     redirect('/login')
   }
 
-  const { data: membership } = await supabase
-    .from('company_members')
-    .select('company_id')
-    .eq('user_id', user.id)
-    .limit(1)
-    .maybeSingle()
-
-  if (!membership) {
-    redirect('/onboarding')
-  }
+  const { companyId, role } = await getCompanyContext(supabase, user)
+  if (!canWrite(role)) return { error: READ_ONLY_ERROR }
 
   const name = String(formData.get('name') ?? '').trim()
   const type = String(formData.get('type') ?? '').trim()
@@ -47,7 +40,7 @@ export async function createAccount(formData: FormData) {
   const { data: account, error: insertError } = await supabase
     .from('accounts')
     .insert({
-      company_id: membership.company_id,
+      company_id: companyId,
       name,
       type,
       opening_balance: openingBalanceValue,
@@ -57,11 +50,11 @@ export async function createAccount(formData: FormData) {
     .single()
 
   if (insertError || !account?.id) {
-    return { error: 'Could not create account. Please try again.' }
+    return { error: insertError?.message || 'Could not create account. Please try again.' }
   }
 
   await logAudit({
-    companyId: membership.company_id,
+    companyId,
     userId: user.id,
     action: 'created',
     entityType: 'account',
