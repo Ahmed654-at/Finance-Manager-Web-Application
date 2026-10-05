@@ -32,7 +32,7 @@ export default async function CompanySettingsPage() {
   const canEdit = role === 'owner' || role === 'admin'
 
   return (
-    <main className="min-h-screen bg-slate-100 px-4 py-8 text-slate-900">
+    <main className="px-4 pb-10 pt-6 text-slate-900">
       <div className="mx-auto max-w-2xl space-y-6">
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
           <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -131,7 +131,7 @@ export default async function CompanySettingsPage() {
             <button
               type="submit"
               disabled={!canEdit}
-              className="w-full rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400"
+              className="w-full rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400 transition duration-200 hover:shadow-md active:scale-95 motion-reduce:transition-none"
             >
               Save company settings
             </button>
@@ -158,7 +158,7 @@ export default async function CompanySettingsPage() {
                 type="text"
                 required
                 defaultValue={accountName}
-                placeholder="e.g. Haseeb Shakeel"
+                placeholder="e.g. Alex Johnson"
                 className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-500 focus:outline-none"
               />
             </div>
@@ -189,81 +189,23 @@ export default async function CompanySettingsPage() {
 
             <button
               type="submit"
-              className="w-full rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-slate-800 shadow-sm"
+              className="w-full rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-slate-800 shadow-sm transition duration-200 hover:shadow-md active:scale-95 motion-reduce:transition-none"
             >
               Update Account Name
             </button>
           </form>
-        </div>
 
-        {/* Email & Invoicing Service Card */}
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <div className="mb-4">
-            <h2 className="text-xl font-semibold text-slate-900">Email & Invoicing Delivery</h2>
-            <p className="mt-1 text-xs text-slate-500">
-              Settings for automated invoice delivery and payment receipts via Resend.
-            </p>
-          </div>
-
-          <div className="space-y-4 text-sm">
-            <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium text-slate-900">Email Delivery Provider</p>
-                  <p className="text-xs text-slate-500">Resend API</p>
-                </div>
-                <span className="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-semibold text-emerald-800">
-                  Connected
-                </span>
-              </div>
-
-              <div className="mt-4 grid gap-2 text-xs text-slate-600">
-                <div className="flex justify-between border-t border-slate-200 pt-2">
-                  <span className="text-slate-500">Default Sender (&quot;From&quot;):</span>
-                  <span className="font-mono text-slate-800">
-                    {process.env.RESEND_FROM_EMAIL || 'Finance Manager <onboarding@resend.dev>'}
-                  </span>
-                </div>
-                <div className="flex justify-between border-t border-slate-200 pt-2">
-                  <span className="text-slate-500">Sending Mode:</span>
-                  <span className="font-medium text-amber-700">
-                    {!process.env.RESEND_FROM_EMAIL || process.env.RESEND_FROM_EMAIL.includes('resend.dev')
-                      ? 'Sandbox / Test Mode (onboarding@resend.dev)'
-                      : 'Production (Custom Domain)'}
-                  </span>
-                </div>
-              </div>
+          <div className="mt-6 flex flex-col gap-3 border-t border-slate-200 pt-5 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-sm font-medium text-slate-900">Password</p>
+              <p className="mt-0.5 text-xs text-slate-500">Change the password you use to sign in.</p>
             </div>
-
-            {(!process.env.RESEND_FROM_EMAIL || process.env.RESEND_FROM_EMAIL.includes('resend.dev')) && (
-              <div className="rounded-xl border border-amber-200 bg-amber-50/70 p-4 text-xs text-amber-900 leading-relaxed">
-                <p className="font-semibold text-amber-950 flex items-center gap-1.5">
-                  <span>ℹ</span> Why aren&apos;t emails arriving in your personal or customer inboxes?
-                </p>
-                <p className="mt-1.5 text-amber-800">
-                  In free Resend test mode, Resend only allows sending emails to the specific email address
-                  registered on that Resend account. Attempting to send invoices to any other recipient will be
-                  blocked by Resend with a 403 error.
-                </p>
-                <div className="mt-3 space-y-1.5 text-amber-950">
-                  <p className="font-medium">To deliver invoices to yourself or any client:</p>
-                  <p>
-                    <strong>1. Free Testing:</strong> Sign up at{' '}
-                    <a href="https://resend.com" target="_blank" rel="noreferrer" className="underline font-semibold">
-                      resend.com
-                    </a>{' '}
-                    with your email, create a new API key, and set <code>RESEND_API_KEY</code> in your <code>.env</code>.
-                  </p>
-                  <p>
-                    <strong>2. Full Production:</strong> Verify your domain at{' '}
-                    <a href="https://resend.com/domains" target="_blank" rel="noreferrer" className="underline font-semibold">
-                      resend.com/domains
-                    </a>{' '}
-                    and set <code>RESEND_FROM_EMAIL=&quot;billing@yourdomain.com&quot;</code> in <code>.env</code>.
-                  </p>
-                </div>
-              </div>
-            )}
+            <Link
+              href="/account/password"
+              className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-center text-sm font-medium text-slate-700 hover:border-slate-400 hover:bg-slate-50 transition duration-200 hover:shadow-md active:scale-95 motion-reduce:transition-none"
+            >
+              Change password
+            </Link>
           </div>
         </div>
       </div>

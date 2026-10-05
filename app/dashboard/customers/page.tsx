@@ -32,7 +32,7 @@ export default async function CustomersPage() {
   const customers = customersResult ?? []
 
   return (
-    <main className="min-h-screen bg-slate-100 px-4 py-8 text-slate-900">
+    <main className="px-4 pb-10 pt-6 text-slate-900">
       <div className="mx-auto max-w-4xl">
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
           <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -104,7 +104,7 @@ export default async function CustomersPage() {
 
             <button
               type="submit"
-              className="w-full rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-slate-800"
+              className="w-full rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-slate-800 transition duration-200 hover:shadow-md active:scale-95 motion-reduce:transition-none"
             >
               Add customer
             </button>
@@ -148,7 +148,7 @@ export default async function CustomersPage() {
                         action={deleteCustomer.bind(null, customer.id)}
                         label="Delete"
                         confirmText="Delete this customer?"
-                        className="rounded-lg border border-red-300 bg-red-50 px-2.5 py-1.5 text-xs font-medium text-red-700 transition hover:border-red-400 hover:bg-red-100"
+                        className="rounded-lg border border-red-300 bg-red-50 px-2.5 py-1.5 text-xs font-medium text-red-700 hover:border-red-400 hover:bg-red-100 transition-colors duration-200 motion-reduce:transition-none"
                       />
                     </div>
                   </div>

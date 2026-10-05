@@ -144,7 +144,7 @@ export default async function ReportsPage({
   const cashflowQuery = new URLSearchParams({ from, to, type: 'cashflow' })
 
   return (
-    <main className="min-h-screen bg-slate-100 px-4 py-8 text-slate-900">
+    <main className="px-4 pb-10 pt-6 text-slate-900">
       <div className="mx-auto max-w-6xl">
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
           <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -186,7 +186,7 @@ export default async function ReportsPage({
 
             <button
               type="submit"
-              className="inline-flex items-center justify-center rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-slate-800"
+              className="inline-flex items-center justify-center rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-slate-800 transition duration-200 hover:shadow-md active:scale-95 motion-reduce:transition-none"
             >
               Filter
             </button>
@@ -197,13 +197,13 @@ export default async function ReportsPage({
               <div className="mb-8 flex flex-wrap gap-3">
                 <a
                   href={`/dashboard/reports/export?${pnlQuery.toString()}`}
-                  className="inline-flex items-center rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:bg-slate-50"
+                  className="inline-flex items-center rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:border-slate-400 hover:bg-slate-50 transition duration-200 hover:shadow-md active:scale-95 motion-reduce:transition-none"
                 >
                   Export P&L as CSV
                 </a>
                 <a
                   href={`/dashboard/reports/export?${cashflowQuery.toString()}`}
-                  className="inline-flex items-center rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:bg-slate-50"
+                  className="inline-flex items-center rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:border-slate-400 hover:bg-slate-50 transition duration-200 hover:shadow-md active:scale-95 motion-reduce:transition-none"
                 >
                   Export Cash Flow as CSV
                 </a>

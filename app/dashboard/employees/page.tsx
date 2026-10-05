@@ -71,7 +71,7 @@ export default async function EmployeesPage() {
   const today = new Date().toISOString().slice(0, 10)
 
   return (
-    <main className="min-h-screen bg-slate-100 px-4 py-8 text-slate-900">
+    <main className="px-4 pb-10 pt-6 text-slate-900">
       <div className="mx-auto max-w-6xl space-y-8">
         {/* Navigation & Header */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -94,13 +94,13 @@ export default async function EmployeesPage() {
 
         {/* KPI Cards */}
         <div className="grid gap-4 sm:grid-cols-3">
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="animate-fade-in-up rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition duration-300 [animation-delay:0ms] hover:-translate-y-1 hover:shadow-lg motion-reduce:animate-none motion-reduce:transition-none">
             <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Active Staff</p>
             <p className="mt-2 text-3xl font-bold text-slate-900">{activeEmployees.length}</p>
             <p className="mt-1 text-xs text-slate-500">{employees.length} total registered</p>
           </div>
 
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="animate-fade-in-up rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition duration-300 [animation-delay:75ms] hover:-translate-y-1 hover:shadow-lg motion-reduce:animate-none motion-reduce:transition-none">
             <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Monthly Commitment</p>
             <p className="mt-2 text-3xl font-bold text-slate-900">
               {formatCurrency(totalMonthlyPayroll, company.currency)}
@@ -108,7 +108,7 @@ export default async function EmployeesPage() {
             <p className="mt-1 text-xs text-slate-500">Based on active base salaries</p>
           </div>
 
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="animate-fade-in-up rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition duration-300 [animation-delay:150ms] hover:-translate-y-1 hover:shadow-lg motion-reduce:animate-none motion-reduce:transition-none">
             <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Recent Disbursements</p>
             <p className="mt-2 text-3xl font-bold text-emerald-600">
               {formatCurrency(totalSalariesPaid, company.currency)}
@@ -231,7 +231,7 @@ export default async function EmployeesPage() {
 
                   <button
                     type="submit"
-                    className="w-full rounded-lg bg-emerald-700 py-2.5 text-sm font-medium text-white transition hover:bg-emerald-800"
+                    className="w-full rounded-lg bg-emerald-700 py-2.5 text-sm font-medium text-white transition duration-200 hover:bg-emerald-800 hover:shadow-md active:scale-95 motion-reduce:transition-none"
                   >
                     Confirm & Record Salary Disbursement
                   </button>
@@ -270,7 +270,7 @@ export default async function EmployeesPage() {
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {employees.map((emp) => (
-                    <tr key={emp.id} className="hover:bg-slate-50">
+                    <tr key={emp.id} className="transition-colors duration-200 hover:bg-slate-50 motion-reduce:transition-none">
                       <td className="py-3 pr-4">
                         <p className="font-semibold text-slate-900">{emp.name}</p>
                         {emp.email && <p className="text-xs text-slate-500">{emp.email}</p>}
@@ -357,7 +357,7 @@ export default async function EmployeesPage() {
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {salaries.map((sal) => (
-                    <tr key={sal.id} className="hover:bg-slate-50">
+                    <tr key={sal.id} className="transition-colors duration-200 hover:bg-slate-50 motion-reduce:transition-none">
                       <td className="py-3 pr-4 text-slate-600">{sal.payment_date}</td>
                       <td className="py-3 pr-4 font-medium text-slate-900">{sal.payment_month}</td>
                       <td className="py-3 pr-4">

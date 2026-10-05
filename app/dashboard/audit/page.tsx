@@ -89,7 +89,7 @@ export default async function ActivityLogPage({
   )
 
   return (
-    <main className="min-h-screen bg-slate-100 px-4 py-8 text-slate-900">
+    <main className="px-4 pb-10 pt-6 text-slate-900">
       <div className="mx-auto max-w-5xl">
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
           <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -111,7 +111,7 @@ export default async function ActivityLogPage({
                 <Link
                   key={option.key}
                   href={href}
-                  className={`rounded-lg border px-3 py-2 text-sm font-medium transition ${
+                  className={`rounded-lg border px-3 py-2 text-sm font-medium transition duration-200 hover:shadow-md active:scale-95 motion-reduce:transition-none ${
                     isActive
                       ? 'border-slate-900 bg-slate-900 text-white'
                       : 'border-slate-300 bg-white text-slate-700 hover:border-slate-400 hover:bg-slate-50'

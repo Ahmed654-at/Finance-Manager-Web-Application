@@ -74,7 +74,7 @@ export default function NotificationBell({ initialNotifications }: NotificationB
       >
         <span aria-hidden="true">🔔</span>
         {unreadCount > 0 ? (
-          <span className="absolute -right-1 -top-1 inline-flex min-h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-semibold text-white">
+          <span className="absolute -right-1 -top-1 inline-flex min-h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-semibold text-slate-950">
             {unreadCount > 9 ? '9+' : unreadCount}
           </span>
         ) : null}

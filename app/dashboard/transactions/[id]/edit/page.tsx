@@ -103,7 +103,7 @@ export default function EditTransactionPage() {
 
   if (loading || !transaction) {
     return (
-      <main className="min-h-screen bg-slate-100 px-4 py-8 text-slate-900">
+      <main className="px-4 pb-10 pt-6 text-slate-900">
         <div className="mx-auto max-w-2xl">
           <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
             <p className="text-sm text-slate-500">Loading...</p>
@@ -114,7 +114,7 @@ export default function EditTransactionPage() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-100 px-4 py-8 text-slate-900">
+    <main className="px-4 pb-10 pt-6 text-slate-900">
       <div className="mx-auto max-w-2xl">
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
           <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -250,7 +250,7 @@ export default function EditTransactionPage() {
               <button
                 type="submit"
                 disabled={isPending}
-                className="rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+                className="rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60 transition duration-200 hover:shadow-md active:scale-95 motion-reduce:transition-none"
               >
                 {isPending ? 'Saving...' : 'Save changes'}
               </button>
@@ -264,7 +264,7 @@ export default function EditTransactionPage() {
               }}
               label="Delete"
               confirmText="Delete this transaction?"
-              className="rounded-lg border border-red-300 bg-red-50 px-4 py-2.5 text-sm font-medium text-red-700 transition hover:border-red-400 hover:bg-red-100"
+              className="rounded-lg border border-red-300 bg-red-50 px-4 py-2.5 text-sm font-medium text-red-700 hover:border-red-400 hover:bg-red-100 transition-colors duration-200 motion-reduce:transition-none"
             />
           </div>
         </div>

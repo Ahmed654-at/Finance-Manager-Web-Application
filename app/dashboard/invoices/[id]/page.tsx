@@ -100,7 +100,7 @@ export default async function InvoiceDetailPage({
   const canCancel = invoice.status !== 'cancelled' && invoice.status !== 'paid'
 
   return (
-    <main className="min-h-screen bg-slate-100 px-4 py-8 text-slate-900">
+    <main className="px-4 pb-10 pt-6 text-slate-900">
       <div className="mx-auto max-w-5xl">
         {sent === '1' && (
           <div className="mb-4 flex items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-emerald-900 shadow-sm">
@@ -196,7 +196,7 @@ export default async function InvoiceDetailPage({
               {invoice.status === 'draft' ? (
                 <Link
                   href={`/dashboard/invoices/${invoice.id}/edit`}
-                  className="inline-flex items-center rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:bg-slate-50"
+                  className="inline-flex items-center rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:border-slate-400 hover:bg-slate-50 transition duration-200 hover:shadow-md active:scale-95 motion-reduce:transition-none"
                 >
                   Edit
                 </Link>
@@ -209,11 +209,11 @@ export default async function InvoiceDetailPage({
                     ? 'Delete this invoice?'
                     : 'This invoice has already been sent — delete it anyway?'
                 }
-                className="rounded-lg border border-red-300 bg-red-50 px-3 py-2 text-sm font-medium text-red-700 transition hover:border-red-400 hover:bg-red-100"
+                className="rounded-lg border border-red-300 bg-red-50 px-3 py-2 text-sm font-medium text-red-700 hover:border-red-400 hover:bg-red-100 transition-colors duration-200 motion-reduce:transition-none"
               />
               <a
                 href={`/dashboard/invoices/${invoice.id}/pdf`}
-                className="inline-flex items-center rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:bg-slate-50"
+                className="inline-flex items-center rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:border-slate-400 hover:bg-slate-50 transition duration-200 hover:shadow-md active:scale-95 motion-reduce:transition-none"
               >
                 Download PDF
               </a>
@@ -239,7 +239,7 @@ export default async function InvoiceDetailPage({
                   <input type="hidden" name="status" value="sent" />
                   <button
                     type="submit"
-                    className="rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-blue-500"
+                    className="rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-slate-950 hover:bg-blue-500 transition duration-200 hover:shadow-md active:scale-95 motion-reduce:transition-none"
                   >
                     Mark as Sent
                   </button>
@@ -253,7 +253,7 @@ export default async function InvoiceDetailPage({
                     <input type="hidden" name="status" value="paid" />
                     <button
                       type="submit"
-                      className="rounded-lg bg-emerald-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-emerald-500"
+                      className="rounded-lg bg-emerald-600 px-3 py-2 text-sm font-medium text-slate-950 hover:bg-emerald-500 transition duration-200 hover:shadow-md active:scale-95 motion-reduce:transition-none"
                     >
                       Mark as Paid
                     </button>
@@ -263,7 +263,7 @@ export default async function InvoiceDetailPage({
                     <input type="hidden" name="status" value="overdue" />
                     <button
                       type="submit"
-                      className="rounded-lg bg-red-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-red-500"
+                      className="rounded-lg bg-red-600 px-3 py-2 text-sm font-medium text-slate-950 hover:bg-red-500 transition-colors duration-200 motion-reduce:transition-none"
                     >
                       Mark as Overdue
                     </button>
@@ -289,7 +289,7 @@ export default async function InvoiceDetailPage({
                   <input type="hidden" name="status" value="cancelled" />
                   <button
                     type="submit"
-                    className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:bg-slate-50"
+                    className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:border-slate-400 hover:bg-slate-50 transition duration-200 hover:shadow-md active:scale-95 motion-reduce:transition-none"
                   >
                     Cancel Invoice
                   </button>

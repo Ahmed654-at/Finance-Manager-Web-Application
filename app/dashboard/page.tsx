@@ -3,8 +3,6 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { getCompanyContext } from '@/lib/company'
 import { formatCurrency } from '@/lib/currency'
-import { getAccountName } from '@/lib/user'
-import DashboardNav from './components/DashboardNav'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -16,7 +14,6 @@ export default async function DashboardPage() {
 
   // Get or auto-initialize single company context
   const { companyId, company } = await getCompanyContext(supabase, user)
-  const accountName = await getAccountName(supabase, user)
 
   // 1. Fetch Transactions
   const { data: allTransactions } = await supabase
@@ -85,10 +82,8 @@ export default async function DashboardPage() {
   const pendingClaimsAmount = (pendingClaimsData ?? []).reduce((sum, c) => sum + Number(c.amount || 0), 0)
 
   return (
-    <main className="min-h-screen bg-slate-100 px-4 py-8 text-slate-900">
+    <main className="px-4 pb-10 pt-6 text-slate-900">
       <div className="mx-auto max-w-6xl space-y-8">
-        {/* Navigation Bar */}
-        <DashboardNav companyName={company.name} userEmail={user.email} accountName={accountName} />
 
         {/* Overview Header & Primary Action */}
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -98,16 +93,16 @@ export default async function DashboardPage() {
           </div>
           <Link
             href="/dashboard/transactions/new"
-            className="inline-flex items-center gap-1.5 self-start rounded-xl bg-slate-900 px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-slate-800 sm:self-auto"
+            className="group inline-flex items-center gap-1.5 self-start rounded-xl bg-slate-900 px-4 py-2 text-xs font-semibold text-white shadow-sm transition duration-200 hover:-translate-y-0.5 hover:bg-slate-800 hover:shadow-lg active:scale-95 motion-reduce:transition-none sm:self-auto"
           >
-            <span>+</span> Record Transaction
+            <span className="inline-block transition-transform duration-200 group-hover:rotate-90 motion-reduce:transition-none">+</span> Record Transaction
           </Link>
         </div>
 
         {/* Primary KPI Grid Tailored for AI & Product Company */}
         <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {/* Card 1: Total Income & Revenue Streams */}
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="animate-fade-in-up rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition duration-300 [animation-delay:0ms] hover:-translate-y-1 hover:shadow-lg motion-reduce:animate-none motion-reduce:transition-none">
             <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Total Revenue</p>
             <p className="mt-2 text-2xl font-bold text-emerald-600 sm:text-3xl">
               {formatCurrency(totalIncome, company.currency)}
@@ -125,7 +120,7 @@ export default async function DashboardPage() {
           </div>
 
           {/* Card 2: Total Expenses & Payroll/Team Split */}
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="animate-fade-in-up rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition duration-300 [animation-delay:75ms] hover:-translate-y-1 hover:shadow-lg motion-reduce:animate-none motion-reduce:transition-none">
             <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Total Expenses</p>
             <p className="mt-2 text-2xl font-bold text-red-600 sm:text-3xl">
               {formatCurrency(totalExpenses, company.currency)}
@@ -143,7 +138,7 @@ export default async function DashboardPage() {
           </div>
 
           {/* Card 3: Net Profit */}
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="animate-fade-in-up rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition duration-300 [animation-delay:150ms] hover:-translate-y-1 hover:shadow-lg motion-reduce:animate-none motion-reduce:transition-none">
             <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Net Profit / Loss</p>
             <p className={`mt-2 text-2xl font-bold sm:text-3xl ${netBalance >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
               {formatCurrency(netBalance, company.currency)}
@@ -163,7 +158,7 @@ export default async function DashboardPage() {
           </div>
 
           {/* Card 4: Invoices & Receivables */}
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="animate-fade-in-up rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition duration-300 [animation-delay:225ms] hover:-translate-y-1 hover:shadow-lg motion-reduce:animate-none motion-reduce:transition-none">
             <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Invoices & Receivables</p>
             <p className="mt-2 text-2xl font-bold text-slate-900 sm:text-3xl">
               {formatCurrency(totalInvoiced, company.currency)}
@@ -190,9 +185,10 @@ export default async function DashboardPage() {
             </div>
             <Link
               href="/dashboard/transactions"
-              className="text-xs font-semibold text-slate-600 hover:text-slate-900"
+              className="group text-xs font-semibold text-slate-600 transition-colors duration-200 hover:text-slate-900 motion-reduce:transition-none"
             >
-              View all transactions →
+              View all transactions{" "}
+              <span className="inline-block transition-transform duration-200 group-hover:translate-x-1 motion-reduce:transition-none">→</span>
             </Link>
           </div>
 
@@ -218,7 +214,7 @@ export default async function DashboardPage() {
                     const isIncome = t.type === 'income'
 
                     return (
-                      <tr key={t.id} className="hover:bg-slate-50">
+                      <tr key={t.id} className="transition-colors duration-200 hover:bg-slate-50 motion-reduce:transition-none">
                         <td className="py-3 pr-4 text-slate-500">{t.transaction_date || '—'}</td>
                         <td className="py-3 pr-4 font-medium text-slate-900">{t.description || '—'}</td>
                         <td className="py-3 pr-4 text-xs text-slate-600">{t.categories?.name || 'General'}</td>
@@ -290,7 +286,7 @@ export default async function DashboardPage() {
             <div className="mt-4 grid grid-cols-2 gap-3 text-xs">
               <Link
                 href="/dashboard/employees"
-                className="flex flex-col gap-1 rounded-xl border border-slate-200 p-3 transition hover:border-slate-400 hover:bg-slate-50"
+                className="flex animate-fade-in-up flex-col gap-1 rounded-xl border border-slate-200 p-3 transition duration-200 [animation-delay:0ms] hover:-translate-y-0.5 hover:border-slate-400 hover:bg-slate-50 hover:shadow-md active:scale-95 motion-reduce:animate-none motion-reduce:transition-none"
               >
                 <span className="font-semibold text-slate-900">Employees & Payroll</span>
                 <span className="text-slate-500">{activeEmployees.length} Active Staff</span>
@@ -298,7 +294,7 @@ export default async function DashboardPage() {
 
               <Link
                 href="/dashboard/team-expenses"
-                className="flex flex-col gap-1 rounded-xl border border-slate-200 p-3 transition hover:border-slate-400 hover:bg-slate-50"
+                className="flex animate-fade-in-up flex-col gap-1 rounded-xl border border-slate-200 p-3 transition duration-200 [animation-delay:50ms] hover:-translate-y-0.5 hover:border-slate-400 hover:bg-slate-50 hover:shadow-md active:scale-95 motion-reduce:animate-none motion-reduce:transition-none"
               >
                 <span className="font-semibold text-slate-900">Team Expenses</span>
                 <span className="text-slate-500">{pendingClaimsCount} Claims Pending</span>
@@ -306,7 +302,7 @@ export default async function DashboardPage() {
 
               <Link
                 href="/dashboard/services"
-                className="flex flex-col gap-1 rounded-xl border border-slate-200 p-3 transition hover:border-slate-400 hover:bg-slate-50"
+                className="flex animate-fade-in-up flex-col gap-1 rounded-xl border border-slate-200 p-3 transition duration-200 [animation-delay:100ms] hover:-translate-y-0.5 hover:border-slate-400 hover:bg-slate-50 hover:shadow-md active:scale-95 motion-reduce:animate-none motion-reduce:transition-none"
               >
                 <span className="font-semibold text-slate-900">AI & Products</span>
                 <span className="text-slate-500">Manage Offerings</span>
@@ -314,7 +310,7 @@ export default async function DashboardPage() {
 
               <Link
                 href="/dashboard/accounts"
-                className="flex flex-col gap-1 rounded-xl border border-slate-200 p-3 transition hover:border-slate-400 hover:bg-slate-50"
+                className="flex animate-fade-in-up flex-col gap-1 rounded-xl border border-slate-200 p-3 transition duration-200 [animation-delay:150ms] hover:-translate-y-0.5 hover:border-slate-400 hover:bg-slate-50 hover:shadow-md active:scale-95 motion-reduce:animate-none motion-reduce:transition-none"
               >
                 <span className="font-semibold text-slate-900">Accounts & Wallets</span>
                 <span className="text-slate-500">Cash & Bank Balances</span>
@@ -322,7 +318,7 @@ export default async function DashboardPage() {
 
               <Link
                 href="/dashboard/customers"
-                className="flex flex-col gap-1 rounded-xl border border-slate-200 p-3 transition hover:border-slate-400 hover:bg-slate-50"
+                className="flex animate-fade-in-up flex-col gap-1 rounded-xl border border-slate-200 p-3 transition duration-200 [animation-delay:200ms] hover:-translate-y-0.5 hover:border-slate-400 hover:bg-slate-50 hover:shadow-md active:scale-95 motion-reduce:animate-none motion-reduce:transition-none"
               >
                 <span className="font-semibold text-slate-900">Customers & Clients</span>
                 <span className="text-slate-500">Directory</span>
@@ -330,7 +326,7 @@ export default async function DashboardPage() {
 
               <Link
                 href="/dashboard/budgets"
-                className="flex flex-col gap-1 rounded-xl border border-slate-200 p-3 transition hover:border-slate-400 hover:bg-slate-50"
+                className="flex animate-fade-in-up flex-col gap-1 rounded-xl border border-slate-200 p-3 transition duration-200 [animation-delay:250ms] hover:-translate-y-0.5 hover:border-slate-400 hover:bg-slate-50 hover:shadow-md active:scale-95 motion-reduce:animate-none motion-reduce:transition-none"
               >
                 <span className="font-semibold text-slate-900">Budgets & Limits</span>
                 <span className="text-slate-500">Spending Thresholds</span>
@@ -338,7 +334,7 @@ export default async function DashboardPage() {
 
               <Link
                 href="/dashboard/reports"
-                className="flex flex-col gap-1 rounded-xl border border-slate-200 p-3 transition hover:border-slate-400 hover:bg-slate-50"
+                className="flex animate-fade-in-up flex-col gap-1 rounded-xl border border-slate-200 p-3 transition duration-200 [animation-delay:300ms] hover:-translate-y-0.5 hover:border-slate-400 hover:bg-slate-50 hover:shadow-md active:scale-95 motion-reduce:animate-none motion-reduce:transition-none"
               >
                 <span className="font-semibold text-slate-900">Reports & Analytics</span>
                 <span className="text-slate-500">P&L and Cash Flow</span>

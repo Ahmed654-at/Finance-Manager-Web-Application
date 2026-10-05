@@ -60,7 +60,7 @@ export default async function SalaryRequestsPage({
   )
 
   return (
-    <main className="min-h-screen bg-slate-100 px-4 py-8 text-slate-900">
+    <main className="px-4 pb-10 pt-6 text-slate-900">
       <div className="mx-auto max-w-6xl space-y-6">
         <div>
           <Link href="/dashboard" className="text-sm font-medium text-slate-500 hover:text-slate-800">
@@ -82,7 +82,7 @@ export default async function SalaryRequestsPage({
               <Link
                 key={st}
                 href={`/dashboard/salary-requests?status=${st}`}
-                className={`rounded-lg border px-3 py-1.5 font-medium capitalize transition ${
+                className={`rounded-lg border px-3 py-1.5 font-medium capitalize transition duration-200 hover:shadow-md active:scale-95 motion-reduce:transition-none ${
                   statusFilter === st
                     ? 'border-slate-900 bg-slate-900 text-white'
                     : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
@@ -180,7 +180,7 @@ export default async function SalaryRequestsPage({
                                 </select>
                                 <button
                                   type="submit"
-                                  className="rounded-lg bg-emerald-600 px-2.5 py-1 text-xs font-medium text-white hover:bg-emerald-700"
+                                  className="rounded-lg bg-emerald-600 px-2.5 py-1 text-xs font-medium text-slate-950 hover:bg-emerald-700 transition duration-200 hover:shadow-md active:scale-95 motion-reduce:transition-none"
                                 >
                                   Approve
                                 </button>
@@ -203,7 +203,7 @@ export default async function SalaryRequestsPage({
                                 />
                                 <button
                                   type="submit"
-                                  className="rounded-lg bg-red-600 px-2.5 py-1 text-xs font-medium text-white hover:bg-red-700"
+                                  className="rounded-lg bg-red-600 px-2.5 py-1 text-xs font-medium text-slate-950 hover:bg-red-700 transition-colors duration-200 motion-reduce:transition-none"
                                 >
                                   Reject
                                 </button>

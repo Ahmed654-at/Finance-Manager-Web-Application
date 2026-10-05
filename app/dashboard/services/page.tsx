@@ -79,7 +79,7 @@ export default async function ServicesAndProductsPage({
   const today = new Date().toISOString().slice(0, 10)
 
   return (
-    <main className="min-h-screen bg-slate-100 px-4 py-8 text-slate-900">
+    <main className="px-4 pb-10 pt-6 text-slate-900">
       <div className="mx-auto max-w-6xl space-y-8">
         {/* Header */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -102,7 +102,7 @@ export default async function ServicesAndProductsPage({
 
         {/* Revenue Attribution KPI Cards */}
         <div className="grid gap-4 sm:grid-cols-3">
-          <div className="rounded-2xl border border-indigo-200 bg-indigo-50/50 p-5 shadow-sm">
+          <div className="animate-fade-in-up rounded-2xl border border-indigo-200 bg-indigo-50/50 p-5 shadow-sm transition duration-300 [animation-delay:0ms] hover:-translate-y-1 hover:shadow-lg motion-reduce:animate-none motion-reduce:transition-none">
             <div className="flex items-center justify-between">
               <p className="text-xs font-semibold uppercase tracking-wider text-indigo-700">AI Services Income</p>
               <span className="rounded-full bg-indigo-100 px-2 py-0.5 text-[10px] font-bold text-indigo-800">
@@ -115,7 +115,7 @@ export default async function ServicesAndProductsPage({
             <p className="mt-1 text-xs text-indigo-700">Custom models, prompt agents, consulting</p>
           </div>
 
-          <div className="rounded-2xl border border-emerald-200 bg-emerald-50/50 p-5 shadow-sm">
+          <div className="animate-fade-in-up rounded-2xl border border-emerald-200 bg-emerald-50/50 p-5 shadow-sm transition duration-300 [animation-delay:75ms] hover:-translate-y-1 hover:shadow-lg motion-reduce:animate-none motion-reduce:transition-none">
             <div className="flex items-center justify-between">
               <p className="text-xs font-semibold uppercase tracking-wider text-emerald-700">Product Selling Income</p>
               <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-800">
@@ -128,7 +128,7 @@ export default async function ServicesAndProductsPage({
             <p className="mt-1 text-xs text-emerald-700">Software licenses, templates, SaaS subscriptions</p>
           </div>
 
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="animate-fade-in-up rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition duration-300 [animation-delay:150ms] hover:-translate-y-1 hover:shadow-lg motion-reduce:animate-none motion-reduce:transition-none">
             <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Total Catalog Offerings</p>
             <p className="mt-2 text-3xl font-bold text-slate-900">{items.length}</p>
             <p className="mt-1 text-xs text-slate-500">Active products & billable service lines</p>
@@ -139,7 +139,7 @@ export default async function ServicesAndProductsPage({
         {canManage && (
           <div className="grid gap-6 lg:grid-cols-2">
             {/* Add Offering Form */}
-            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div className="animate-fade-in-up rounded-2xl border border-slate-200 bg-white p-6 shadow-sm [animation-delay:225ms] motion-reduce:animate-none">
               <h2 className="text-lg font-semibold text-slate-900">Add New Product or AI Service</h2>
               <p className="mt-1 text-xs text-slate-500">Define a service packages, API solution, or software product</p>
 
@@ -207,7 +207,7 @@ export default async function ServicesAndProductsPage({
 
                 <button
                   type="submit"
-                  className="w-full rounded-lg bg-slate-900 py-2.5 text-sm font-medium text-white transition hover:bg-slate-800"
+                  className="w-full rounded-lg bg-slate-900 py-2.5 text-sm font-medium text-white transition duration-200 hover:bg-slate-800 hover:shadow-md active:scale-95 motion-reduce:transition-none"
                 >
                   Save to Catalog
                 </button>
@@ -215,7 +215,7 @@ export default async function ServicesAndProductsPage({
             </div>
 
             {/* Quick Record Revenue Form */}
-            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div className="animate-fade-in-up rounded-2xl border border-slate-200 bg-white p-6 shadow-sm [animation-delay:300ms] motion-reduce:animate-none">
               <h2 className="text-lg font-semibold text-slate-900">Record Incoming Payment / Sale</h2>
               <p className="mt-1 text-xs text-slate-500">Instantly record revenue linked to an AI service or product sale</p>
 
@@ -308,7 +308,7 @@ export default async function ServicesAndProductsPage({
 
                   <button
                     type="submit"
-                    className="w-full rounded-lg bg-emerald-700 py-2.5 text-sm font-medium text-white transition hover:bg-emerald-800"
+                    className="w-full rounded-lg bg-emerald-700 py-2.5 text-sm font-medium text-white transition duration-200 hover:bg-emerald-800 hover:shadow-md active:scale-95 motion-reduce:transition-none"
                   >
                     Record Income to Ledger
                   </button>
@@ -335,7 +335,7 @@ export default async function ServicesAndProductsPage({
                 <Link
                   key={t.key}
                   href={`/dashboard/services?tab=${t.key}`}
-                  className={`rounded-lg border px-3 py-1.5 font-medium transition ${
+                  className={`rounded-lg border px-3 py-1.5 font-medium transition duration-200 hover:shadow-md active:scale-95 motion-reduce:transition-none ${
                     activeTab === t.key
                       ? 'border-slate-900 bg-slate-900 text-white'
                       : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
@@ -366,7 +366,7 @@ export default async function ServicesAndProductsPage({
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {items.map((item) => (
-                    <tr key={item.id} className="hover:bg-slate-50">
+                    <tr key={item.id} className="transition-colors duration-200 hover:bg-slate-50 motion-reduce:transition-none">
                       <td className="py-3 pr-4 font-semibold text-slate-900">{item.name}</td>
                       <td className="py-3 pr-4">
                         <span

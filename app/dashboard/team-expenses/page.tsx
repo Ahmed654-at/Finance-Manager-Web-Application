@@ -74,7 +74,7 @@ export default async function TeamExpensesPage({
   const today = new Date().toISOString().slice(0, 10)
 
   return (
-    <main className="min-h-screen bg-slate-100 px-4 py-8 text-slate-900">
+    <main className="px-4 pb-10 pt-6 text-slate-900">
       <div className="mx-auto max-w-6xl space-y-8">
         {/* Header */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -97,7 +97,7 @@ export default async function TeamExpensesPage({
 
         {/* KPI Cards */}
         <div className="grid gap-4 sm:grid-cols-3">
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="animate-fade-in-up rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition duration-300 [animation-delay:0ms] hover:-translate-y-1 hover:shadow-lg motion-reduce:animate-none motion-reduce:transition-none">
             <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Total Claims Tracked</p>
             <p className="mt-2 text-3xl font-bold text-slate-900">
               {formatCurrency(totalAmount, company.currency)}
@@ -105,7 +105,7 @@ export default async function TeamExpensesPage({
             <p className="mt-1 text-xs text-slate-500">{expenses.length} expense items</p>
           </div>
 
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="animate-fade-in-up rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition duration-300 [animation-delay:75ms] hover:-translate-y-1 hover:shadow-lg motion-reduce:animate-none motion-reduce:transition-none">
             <p className="text-xs font-semibold uppercase tracking-wider text-amber-600">Pending Reimbursement</p>
             <p className="mt-2 text-3xl font-bold text-amber-600">
               {formatCurrency(pendingAmount, company.currency)}
@@ -113,7 +113,7 @@ export default async function TeamExpensesPage({
             <p className="mt-1 text-xs text-slate-500">Awaiting payout confirmation</p>
           </div>
 
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="animate-fade-in-up rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition duration-300 [animation-delay:150ms] hover:-translate-y-1 hover:shadow-lg motion-reduce:animate-none motion-reduce:transition-none">
             <p className="text-xs font-semibold uppercase tracking-wider text-emerald-600">Total Reimbursed</p>
             <p className="mt-2 text-3xl font-bold text-emerald-600">
               {formatCurrency(reimbursedAmount, company.currency)}
@@ -246,7 +246,7 @@ export default async function TeamExpensesPage({
 
             <button
               type="submit"
-              className="rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-slate-800"
+              className="rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-medium text-white hover:bg-slate-800 transition duration-200 hover:shadow-md active:scale-95 motion-reduce:transition-none"
             >
               Submit Team Expense
             </button>
@@ -266,7 +266,7 @@ export default async function TeamExpensesPage({
                 <Link
                   key={st}
                   href={`/dashboard/team-expenses?status=${st}`}
-                  className={`rounded-lg border px-3 py-1.5 font-medium capitalize transition ${
+                  className={`rounded-lg border px-3 py-1.5 font-medium capitalize transition duration-200 hover:shadow-md active:scale-95 motion-reduce:transition-none ${
                     statusFilter === st
                       ? 'border-slate-900 bg-slate-900 text-white'
                       : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
@@ -298,7 +298,7 @@ export default async function TeamExpensesPage({
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {expenses.map((exp) => (
-                    <tr key={exp.id} className="hover:bg-slate-50">
+                    <tr key={exp.id} className="transition-colors duration-200 hover:bg-slate-50 motion-reduce:transition-none">
                       <td className="py-3 pr-4 text-slate-600">{exp.expense_date}</td>
                       <td className="py-3 pr-4 font-semibold text-slate-900">{exp.submitted_by_name}</td>
                       <td className="py-3 pr-4">
@@ -357,7 +357,7 @@ export default async function TeamExpensesPage({
                                 >
                                   <button
                                     type="submit"
-                                    className="rounded-lg bg-blue-600 px-2.5 py-1 text-xs font-medium text-white hover:bg-blue-700"
+                                    className="rounded-lg bg-blue-600 px-2.5 py-1 text-xs font-medium text-slate-950 hover:bg-blue-700 transition duration-200 hover:shadow-md active:scale-95 motion-reduce:transition-none"
                                   >
                                     Approve
                                   </button>
@@ -376,7 +376,7 @@ export default async function TeamExpensesPage({
                                   />
                                   <button
                                     type="submit"
-                                    className="rounded-lg bg-red-600 px-2.5 py-1 text-xs font-medium text-white hover:bg-red-700"
+                                    className="rounded-lg bg-red-600 px-2.5 py-1 text-xs font-medium text-slate-950 hover:bg-red-700 transition-colors duration-200 motion-reduce:transition-none"
                                   >
                                     Reject
                                   </button>
@@ -393,7 +393,7 @@ export default async function TeamExpensesPage({
                               >
                                 <button
                                   type="submit"
-                                  className="rounded-lg bg-emerald-600 px-2.5 py-1 text-xs font-medium text-white hover:bg-emerald-700"
+                                  className="rounded-lg bg-emerald-600 px-2.5 py-1 text-xs font-medium text-slate-950 hover:bg-emerald-700 transition duration-200 hover:shadow-md active:scale-95 motion-reduce:transition-none"
                                 >
                                   Reimburse
                                 </button>

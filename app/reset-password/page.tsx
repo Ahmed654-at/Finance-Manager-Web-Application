@@ -19,7 +19,7 @@ export default async function ResetPasswordPage({
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-slate-100 px-4">
+    <main className="flex min-h-screen items-center justify-center bg-black px-4">
       <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-8">
         <div className="mb-6">
           <h1 className="text-2xl font-semibold text-slate-900">Set a new password</h1>
@@ -66,7 +66,7 @@ export default async function ResetPasswordPage({
 
           <button
             type="submit"
-            className="w-full rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-slate-800"
+            className="w-full rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-slate-800 transition duration-200 hover:shadow-md active:scale-95 motion-reduce:transition-none"
           >
             Save new password
           </button>

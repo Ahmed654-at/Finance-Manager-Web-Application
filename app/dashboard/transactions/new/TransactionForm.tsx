@@ -48,7 +48,7 @@ export default function TransactionForm({ categories, accounts }: TransactionFor
         <label className="block text-sm font-medium text-slate-700">Type</label>
         <div className="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-2">
           <label
-            className={`flex cursor-pointer items-center justify-center rounded-xl border px-3 py-2 text-sm font-medium transition ${
+            className={`flex cursor-pointer items-center justify-center rounded-xl border px-3 py-2 text-sm font-medium transition duration-200 hover:shadow-md active:scale-95 motion-reduce:transition-none ${
               type === 'income'
                 ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
                 : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
@@ -66,7 +66,7 @@ export default function TransactionForm({ categories, accounts }: TransactionFor
           </label>
 
           <label
-            className={`flex cursor-pointer items-center justify-center rounded-xl border px-3 py-2 text-sm font-medium transition ${
+            className={`flex cursor-pointer items-center justify-center rounded-xl border px-3 py-2 text-sm font-medium transition duration-200 hover:shadow-md active:scale-95 motion-reduce:transition-none ${
               type === 'expense'
                 ? 'border-red-500 bg-red-50 text-red-700'
                 : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
@@ -224,7 +224,7 @@ export default function TransactionForm({ categories, accounts }: TransactionFor
       <button
         type="submit"
         disabled={isPending}
-        className="w-full rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+        className="w-full rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60 transition duration-200 hover:shadow-md active:scale-95 motion-reduce:transition-none"
       >
         {isPending ? 'Saving...' : 'Save transaction'}
       </button>

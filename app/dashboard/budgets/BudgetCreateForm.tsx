@@ -240,7 +240,7 @@ export default function BudgetCreateForm({
         <button
           type="submit"
           disabled={submitting}
-          className="inline-flex items-center gap-2 rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-slate-800 disabled:opacity-50"
+          className="inline-flex items-center gap-2 rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-50 transition duration-200 hover:shadow-md active:scale-95 motion-reduce:transition-none"
         >
           {submitting ? 'Creating Budget...' : 'Create Budget'}
         </button>
