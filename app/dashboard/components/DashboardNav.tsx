@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
+import { buttonPrimary, buttonSecondary } from './buttonStyles'
 
 type NavItem = {
   label: string
@@ -235,7 +236,7 @@ export default function DashboardNav({
           <form action="/logout" method="post" className="hidden lg:block">
             <button
               type="submit"
-              className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 shadow-sm transition duration-200 hover:bg-slate-50 hover:text-slate-900 hover:shadow-sm active:scale-95 motion-reduce:transition-none"
+              className={buttonSecondary}
             >
               Sign out
             </button>
@@ -341,12 +342,9 @@ export default function DashboardNav({
 
         <Link
           href={settingsItem.href}
+          onClick={closeMenus}
           aria-current={isActivePath(pathname, settingsItem.href) ? 'page' : undefined}
-          className={`ml-auto whitespace-nowrap rounded-xl px-3 py-1.5 text-xs font-medium transition-all duration-200 motion-reduce:transition-none ${
-            isActivePath(pathname, settingsItem.href)
-              ? 'bg-slate-900 text-white shadow-sm'
-              : 'border border-slate-200 bg-slate-50 text-slate-700 hover:border-slate-300 hover:bg-slate-100 hover:text-slate-900'
-          }`}
+          className={`ml-auto ${tabClass(isActivePath(pathname, settingsItem.href))}`}
         >
           {settingsItem.label}
         </Link>
@@ -391,7 +389,7 @@ export default function DashboardNav({
           <form action="/logout" method="post" className="mt-3 border-t border-slate-200 pt-3">
             <button
               type="submit"
-              className="w-full rounded-xl bg-slate-900 px-3 py-2.5 text-sm font-medium text-white transition duration-200 hover:bg-slate-800 hover:shadow-md active:scale-95 motion-reduce:transition-none"
+              className={`w-full ${buttonPrimary}`}
             >
               Sign out
             </button>

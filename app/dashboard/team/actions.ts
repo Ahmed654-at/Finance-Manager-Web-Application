@@ -49,6 +49,11 @@ export async function addMember(formData: FormData) {
   const email = ((formData.get('email') as string | null) ?? '').trim().toLowerCase()
   const password = ((formData.get('password') as string | null) ?? '').trim()
   const requestedRole = (formData.get('role') as string | null) ?? 'viewer'
+  const fullName = ((formData.get('full_name') as string | null) ?? '').trim()
+
+  if (!fullName) {
+    return { error: 'Full name is required.' }
+  }
 
   if (!email) {
     return { error: 'Email is required.' }
@@ -83,6 +88,8 @@ export async function addMember(formData: FormData) {
       email,
       password,
       email_confirm: true,
+      // Shown as their name in the app (top bar, team list) instead of the email.
+      user_metadata: { full_name: fullName, name: fullName, display_name: fullName },
     })
 
     if (createError || !created?.user) {
@@ -120,8 +127,7 @@ export async function addMember(formData: FormData) {
   const payroll = readPayrollDetails(formData)
 
   if (payroll) {
-    const displayName =
-      String(formData.get('full_name') ?? '').trim() || email.split('@')[0]
+    const displayName = fullName
 
     const result = await upsertPayrollRecord(
       supabase,
