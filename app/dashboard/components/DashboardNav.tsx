@@ -40,6 +40,39 @@ const navGroups: NavGroup[] = [
 
 const settingsItem: NavItem = { label: 'Settings', href: '/dashboard/settings' }
 
+// Desktop bar: the everyday pages stay visible; the rest are grouped into two dropdowns,
+// so the top level has 6 entries instead of 12. The mobile menu still lists every page, grouped.
+type NavDropdown = { id: string; label: string; items: NavItem[] }
+
+const desktopLinks: NavItem[] = [
+  { label: 'Overview', href: '/dashboard' },
+  { label: 'Transactions', href: '/dashboard/transactions' },
+  { label: 'Invoices', href: '/dashboard/invoices' },
+]
+
+const desktopDropdowns: NavDropdown[] = [
+  {
+    id: 'finance',
+    label: 'Finance',
+    items: [
+      { label: 'Accounts', href: '/dashboard/accounts' },
+      { label: 'Budgets', href: '/dashboard/budgets' },
+      { label: 'Reports', href: '/dashboard/reports' },
+      { label: 'AI & Products', href: '/dashboard/services' },
+    ],
+  },
+  {
+    id: 'people',
+    label: 'People',
+    items: [
+      { label: 'Employees', href: '/dashboard/employees' },
+      { label: 'Team Expenses', href: '/dashboard/team-expenses' },
+      { label: 'Salary Requests', href: '/dashboard/salary-requests' },
+      { label: 'Team', href: '/dashboard/team' },
+    ],
+  },
+]
+
 function isActivePath(pathname: string, href: string) {
   if (href === '/dashboard') return pathname === '/dashboard'
   return pathname === href || pathname.startsWith(`${href}/`)
@@ -57,7 +90,9 @@ export default function DashboardNav({
   const pathname = usePathname()
   const [menuOpen, setMenuOpen] = useState(false)
   const [accountOpen, setAccountOpen] = useState(false)
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null)
   const accountRef = useRef<HTMLDivElement>(null)
+  const desktopNavRef = useRef<HTMLElement>(null)
 
   // The email is only used to derive a fallback name; it is never displayed.
   const displayName = accountName || (userEmail ? userEmail.split('@')[0] : 'Account')
@@ -71,16 +106,29 @@ export default function DashboardNav({
 
   // Escape closes whichever menu is open.
   useEffect(() => {
-    if (!menuOpen && !accountOpen) return
+    if (!menuOpen && !accountOpen && !openDropdown) return
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         setMenuOpen(false)
         setAccountOpen(false)
+        setOpenDropdown(null)
       }
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [menuOpen, accountOpen])
+  }, [menuOpen, accountOpen, openDropdown])
+
+  // Clicking outside the desktop bar closes an open Finance / People dropdown.
+  useEffect(() => {
+    if (!openDropdown) return
+    const onPointerDown = (event: MouseEvent) => {
+      if (desktopNavRef.current && !desktopNavRef.current.contains(event.target as Node)) {
+        setOpenDropdown(null)
+      }
+    }
+    document.addEventListener('mousedown', onPointerDown)
+    return () => document.removeEventListener('mousedown', onPointerDown)
+  }, [openDropdown])
 
   // Clicking outside the account menu closes it.
   useEffect(() => {
@@ -97,12 +145,18 @@ export default function DashboardNav({
   const closeMenus = () => {
     setMenuOpen(false)
     setAccountOpen(false)
+    setOpenDropdown(null)
   }
+
+  const tabClass = (active: boolean) =>
+    `whitespace-nowrap rounded-xl px-3 py-1.5 text-xs font-medium transition-all duration-200 motion-reduce:transition-none ${
+      active ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+    }`
 
   return (
     <header className="space-y-3">
       {/* Top bar */}
-      <div className="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-black px-4 py-3 shadow-sm sm:px-5">
+      <div className="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-black px-4 py-3 shadow-sm lg:px-5">
         <Link href="/dashboard" className="min-w-0" onClick={closeMenus}>
           <p className="truncate text-base font-bold tracking-tight text-slate-900 sm:text-lg">
             Company Finance Manager
@@ -214,29 +268,76 @@ export default function DashboardNav({
 
       {/* Desktop navigation */}
       <nav
+        ref={desktopNavRef}
         aria-label="Main"
         className="hidden items-center gap-1 rounded-2xl border border-slate-200 bg-black p-2 shadow-sm lg:flex"
       >
-        {navGroups.map((group, groupIndex) => (
-          <div key={group.title} className="flex items-center gap-1">
-            {groupIndex > 0 && <span className="mx-1 h-5 w-px bg-slate-200" aria-hidden="true" />}
-            {group.items.map((item) => {
-              const active = isActivePath(pathname, item.href)
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  aria-current={active ? 'page' : undefined}
-                  className={`whitespace-nowrap rounded-xl px-3 py-1.5 text-xs font-medium transition-all duration-200 motion-reduce:transition-none ${
-                    active ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-                  }`}
+        {desktopLinks.map((item) => {
+          const active = isActivePath(pathname, item.href)
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              onClick={closeMenus}
+              aria-current={active ? 'page' : undefined}
+              className={tabClass(active)}
+            >
+              {item.label}
+            </Link>
+          )
+        })}
+
+        {desktopDropdowns.map((dropdown) => {
+          const open = openDropdown === dropdown.id
+          const sectionActive = dropdown.items.some((item) => isActivePath(pathname, item.href))
+          const panelId = `nav-dropdown-${dropdown.id}`
+          return (
+            <div key={dropdown.id} className="relative">
+              <button
+                type="button"
+                onClick={() => setOpenDropdown(open ? null : dropdown.id)}
+                aria-expanded={open}
+                aria-controls={panelId}
+                className={`flex items-center gap-1 ${tabClass(sectionActive)}`}
+              >
+                {dropdown.label}
+                <svg
+                  viewBox="0 0 20 20"
+                  className={`h-3.5 w-3.5 transition-transform duration-200 motion-reduce:transition-none ${open ? 'rotate-180' : ''}`}
+                  fill="currentColor"
+                  aria-hidden="true"
                 >
-                  {item.label}
-                </Link>
-              )
-            })}
-          </div>
-        ))}
+                  <path d="M5.23 7.21a.75.75 0 011.06.02L10 11.06l3.71-3.83a.75.75 0 111.08 1.04l-4.25 4.39a.75.75 0 01-1.08 0L5.21 8.27a.75.75 0 01.02-1.06z" />
+                </svg>
+              </button>
+
+              {open && (
+                <ul
+                  id={panelId}
+                  className="absolute left-0 top-full z-20 mt-2 w-52 animate-fade-in-up space-y-0.5 rounded-xl border border-slate-200 bg-white p-1 shadow-lg motion-reduce:animate-none"
+                >
+                  {dropdown.items.map((item) => {
+                    const active = isActivePath(pathname, item.href)
+                    return (
+                      <li key={item.href}>
+                        <Link
+                          href={item.href}
+                          onClick={closeMenus}
+                          aria-current={active ? 'page' : undefined}
+                          className={`block rounded-lg px-3 py-2 text-sm transition-colors duration-200 motion-reduce:transition-none ${
+                            active ? 'bg-slate-900 font-medium text-white' : 'text-slate-700 hover:bg-slate-100'
+                          }`}
+                        >
+                          {item.label}
+                        </Link>
+                      </li>
+                    )
+                  })}
+                </ul>
+              )}
+            </div>
+          )
+        })}
 
         <Link
           href={settingsItem.href}

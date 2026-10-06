@@ -25,8 +25,11 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   return (
     <div className="min-h-screen bg-black text-slate-900">
-      <div className="mx-auto max-w-6xl px-4 pt-4 sm:pt-6">
-        <DashboardNav companyName={company.name} userEmail={user.email} accountName={accountName} />
+      {/* Padding sits outside the max-width, exactly like each page's <main>, so the menu and page share one left edge. */}
+      <div className="px-4 pt-4 sm:pt-6">
+        <div className="mx-auto max-w-6xl">
+          <DashboardNav companyName={company.name} userEmail={user.email} accountName={accountName} />
+        </div>
       </div>
       {children}
     </div>

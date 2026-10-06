@@ -103,7 +103,7 @@ export default async function DashboardPage() {
         <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {/* Card 1: Total Income & Revenue Streams */}
           <div className="animate-fade-in-up rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition duration-300 [animation-delay:0ms] hover:-translate-y-1 hover:shadow-lg motion-reduce:animate-none motion-reduce:transition-none">
-            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Total Revenue</p>
+            <p className="text-sm font-medium text-slate-500">Total Revenue</p>
             <p className="mt-2 text-2xl font-bold text-emerald-600 sm:text-3xl">
               {formatCurrency(totalIncome, company.currency)}
             </p>
@@ -121,7 +121,7 @@ export default async function DashboardPage() {
 
           {/* Card 2: Total Expenses & Payroll/Team Split */}
           <div className="animate-fade-in-up rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition duration-300 [animation-delay:75ms] hover:-translate-y-1 hover:shadow-lg motion-reduce:animate-none motion-reduce:transition-none">
-            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Total Expenses</p>
+            <p className="text-sm font-medium text-slate-500">Total Expenses</p>
             <p className="mt-2 text-2xl font-bold text-red-600 sm:text-3xl">
               {formatCurrency(totalExpenses, company.currency)}
             </p>
@@ -139,7 +139,7 @@ export default async function DashboardPage() {
 
           {/* Card 3: Net Profit */}
           <div className="animate-fade-in-up rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition duration-300 [animation-delay:150ms] hover:-translate-y-1 hover:shadow-lg motion-reduce:animate-none motion-reduce:transition-none">
-            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Net Profit / Loss</p>
+            <p className="text-sm font-medium text-slate-500">Net Profit / Loss</p>
             <p className={`mt-2 text-2xl font-bold sm:text-3xl ${netBalance >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
               {formatCurrency(netBalance, company.currency)}
             </p>
@@ -159,7 +159,7 @@ export default async function DashboardPage() {
 
           {/* Card 4: Invoices & Receivables */}
           <div className="animate-fade-in-up rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition duration-300 [animation-delay:225ms] hover:-translate-y-1 hover:shadow-lg motion-reduce:animate-none motion-reduce:transition-none">
-            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Invoices & Receivables</p>
+            <p className="text-sm font-medium text-slate-500">Invoices & Receivables</p>
             <p className="mt-2 text-2xl font-bold text-slate-900 sm:text-3xl">
               {formatCurrency(totalInvoiced, company.currency)}
             </p>
@@ -177,7 +177,7 @@ export default async function DashboardPage() {
         </section>
 
         {/* Recent Financial Transactions Table */}
-        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h2 className="text-lg font-bold text-slate-900">Recent Transactions</h2>
@@ -239,12 +239,12 @@ export default async function DashboardPage() {
         </section>
 
         {/* Invoices & Team Overview Grid */}
-        <div className="grid gap-6 lg:grid-cols-2">
+        <div className="grid items-start gap-6 lg:grid-cols-2">
           {/* Recent Invoices */}
-          <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
             <div className="mb-4 flex items-center justify-between">
               <div>
-                <h2 className="text-base font-bold text-slate-900">Recent Invoices</h2>
+                <h2 className="text-lg font-bold text-slate-900">Recent Invoices</h2>
                 <p className="text-xs text-slate-500">Client billing and receivables status</p>
               </div>
               <Link href="/dashboard/invoices" className="text-xs font-semibold text-slate-600 hover:text-slate-900">
@@ -279,8 +279,8 @@ export default async function DashboardPage() {
           </section>
 
           {/* Quick Management Links */}
-          <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="text-base font-bold text-slate-900">Company Operations</h2>
+          <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <h2 className="text-lg font-bold text-slate-900">Company Operations</h2>
             <p className="text-xs text-slate-500">Quick access to all company management tools</p>
 
             <div className="mt-4 grid grid-cols-2 gap-3 text-xs">
@@ -338,6 +338,14 @@ export default async function DashboardPage() {
               >
                 <span className="font-semibold text-slate-900">Reports & Analytics</span>
                 <span className="text-slate-500">P&L and Cash Flow</span>
+              </Link>
+
+              <Link
+                href="/dashboard/team"
+                className="flex animate-fade-in-up flex-col gap-1 rounded-xl border border-slate-200 p-3 transition duration-200 [animation-delay:350ms] hover:-translate-y-0.5 hover:border-slate-400 hover:bg-slate-50 hover:shadow-md active:scale-95 motion-reduce:animate-none motion-reduce:transition-none"
+              >
+                <span className="font-semibold text-slate-900">Team & Access</span>
+                <span className="text-slate-500">Logins and Roles</span>
               </Link>
             </div>
           </section>

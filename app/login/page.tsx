@@ -39,14 +39,14 @@ function LoginForm() {
           </p>
         </div>
 
-        <div className="mb-6 flex rounded-lg bg-slate-100 p-1">
+        {/* Segmented control: both tabs share the track; only the active one gets a solid fill. */}
+        <div role="group" aria-label="Choose sign in or sign up" className="mb-6 flex rounded-lg bg-slate-100 p-1">
           <button
             type="button"
             onClick={() => setIsSignUp(false)}
-            className={`flex-1 rounded-md px-4 py-2 text-sm font-medium transition ${
-              !isSignUp
-                ? 'bg-white text-slate-900 shadow-sm'
-                : 'text-slate-500 hover:text-slate-700'
+            aria-pressed={!isSignUp}
+            className={`flex-1 rounded-md px-4 py-2 text-sm font-medium transition-colors duration-200 motion-reduce:transition-none ${
+              !isSignUp ? 'bg-slate-900 text-white' : 'text-slate-500 hover:text-slate-800'
             }`}
           >
             Sign In
@@ -54,10 +54,9 @@ function LoginForm() {
           <button
             type="button"
             onClick={() => setIsSignUp(true)}
-            className={`flex-1 rounded-md px-4 py-2 text-sm font-medium transition ${
-              isSignUp
-                ? 'bg-white text-slate-900 shadow-sm'
-                : 'text-slate-500 hover:text-slate-700'
+            aria-pressed={isSignUp}
+            className={`flex-1 rounded-md px-4 py-2 text-sm font-medium transition-colors duration-200 motion-reduce:transition-none ${
+              isSignUp ? 'bg-slate-900 text-white' : 'text-slate-500 hover:text-slate-800'
             }`}
           >
             Sign Up
@@ -101,20 +100,23 @@ function LoginForm() {
             />
           </div>
 
-          <button
-            type="submit"
-            className="w-full rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-slate-800 transition duration-200 hover:shadow-md active:scale-95 motion-reduce:transition-none"
-          >
-            {isSignUp ? 'Create account' : 'Sign In'}
-          </button>
+          {/* pt-2 + the form's 16px gap = 24px above the primary action; 24px between it and the link. */}
+          <div className="space-y-6 pt-2">
+            <button
+              type="submit"
+              className="w-full rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-slate-800 transition duration-200 hover:shadow-md active:scale-95 motion-reduce:transition-none"
+            >
+              {isSignUp ? 'Create account' : 'Sign In'}
+            </button>
 
-          {!isSignUp && (
-            <p className="text-center text-sm">
-              <Link href="/forgot-password" className="font-medium text-slate-600 hover:text-slate-900">
-                Forgot password?
-              </Link>
-            </p>
-          )}
+            {!isSignUp && (
+              <p className="text-left text-sm">
+                <Link href="/forgot-password" className="font-medium text-slate-600 hover:text-slate-900">
+                  Forgot password?
+                </Link>
+              </p>
+            )}
+          </div>
         </form>
       </div>
     </main>
