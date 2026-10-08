@@ -96,9 +96,9 @@ export default function TransactionForm({ categories, accounts }: TransactionFor
             defaultValue="ai_services"
             className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-slate-500 focus:outline-none"
           >
-            <option value="ai_services">🤖 AI Services & Solutions (Agents, LLMs, Consulting)</option>
-            <option value="product_sales">📦 Product Selling (Software, SaaS, Digital Tools)</option>
-            <option value="other">💵 Other Income</option>
+            <option value="ai_services">AI Services & Solutions (Agents, LLMs, Consulting)</option>
+            <option value="product_sales">Product Selling (Software, SaaS, Digital Tools)</option>
+            <option value="other">Other Income</option>
           </select>
         </div>
       ) : (
@@ -112,11 +112,11 @@ export default function TransactionForm({ categories, accounts }: TransactionFor
             defaultValue="operational"
             className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-slate-500 focus:outline-none"
           >
-            <option value="salary">👥 Employee Salaries & Wages</option>
-            <option value="team_expense">💳 Team Expenses & Reimbursements</option>
-            <option value="infrastructure">☁️ AI & Cloud Infrastructure (APIs, RunPod, AWS GPUs)</option>
-            <option value="operational">🏢 Operational & General Expenses</option>
-            <option value="other">📦 Other</option>
+            <option value="salary">Employee Salaries & Wages</option>
+            <option value="team_expense">Team Expenses & Reimbursements</option>
+            <option value="infrastructure">AI & Cloud Infrastructure (APIs, RunPod, AWS GPUs)</option>
+            <option value="operational">Operational & General Expenses</option>
+            <option value="other">Other</option>
           </select>
         </div>
       )}

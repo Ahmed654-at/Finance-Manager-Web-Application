@@ -110,3 +110,13 @@ body {
   --shadow-lg: 0 0 0 1px rgb(250 204 21 / 0.16), 0 12px 28px -6px rgb(250 204 21 / 0.32);
   --shadow-xl: 0 0 0 1px rgb(250 204 21 / 0.18), 0 20px 40px -10px rgb(250 204 21 / 0.35);
 }
+
+/* Native dropdown lists are drawn by the browser, not by the <select>'s classes. Give the open
+   list the same dark surface and light text as the theme, so options stay readable. */
+@layer base {
+  option,
+  optgroup {
+    background-color: var(--color-white);
+    color: var(--color-slate-900);
+  }
+}
