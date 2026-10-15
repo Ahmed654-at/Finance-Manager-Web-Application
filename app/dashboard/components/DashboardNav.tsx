@@ -3,7 +3,8 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
-import { buttonPrimary, buttonSecondary } from './buttonStyles'
+import { buttonPrimary } from './buttonStyles'
+import AccountMenu from '../../components/AccountMenu'
 
 type NavItem = {
   label: string
@@ -90,34 +91,24 @@ export default function DashboardNav({
 }) {
   const pathname = usePathname()
   const [menuOpen, setMenuOpen] = useState(false)
-  const [accountOpen, setAccountOpen] = useState(false)
   const [openDropdown, setOpenDropdown] = useState<string | null>(null)
-  const accountRef = useRef<HTMLDivElement>(null)
   const desktopNavRef = useRef<HTMLElement>(null)
 
   // The email is only used to derive a fallback name; it is never displayed.
   const displayName = accountName || (userEmail ? userEmail.split('@')[0] : 'Account')
-  const initials =
-    displayName
-      .split(' ')
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((part) => part.charAt(0).toUpperCase())
-      .join('') || displayName.slice(0, 2).toUpperCase()
 
-  // Escape closes whichever menu is open.
+  // Escape closes whichever menu is open (the account menu handles its own Escape).
   useEffect(() => {
-    if (!menuOpen && !accountOpen && !openDropdown) return
+    if (!menuOpen && !openDropdown) return
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         setMenuOpen(false)
-        setAccountOpen(false)
         setOpenDropdown(null)
       }
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [menuOpen, accountOpen, openDropdown])
+  }, [menuOpen, openDropdown])
 
   // Clicking outside the desktop bar closes an open Finance / People dropdown.
   useEffect(() => {
@@ -131,21 +122,8 @@ export default function DashboardNav({
     return () => document.removeEventListener('mousedown', onPointerDown)
   }, [openDropdown])
 
-  // Clicking outside the account menu closes it.
-  useEffect(() => {
-    if (!accountOpen) return
-    const onPointerDown = (event: MouseEvent) => {
-      if (accountRef.current && !accountRef.current.contains(event.target as Node)) {
-        setAccountOpen(false)
-      }
-    }
-    document.addEventListener('mousedown', onPointerDown)
-    return () => document.removeEventListener('mousedown', onPointerDown)
-  }, [accountOpen])
-
   const closeMenus = () => {
     setMenuOpen(false)
-    setAccountOpen(false)
     setOpenDropdown(null)
   }
 
@@ -166,89 +144,20 @@ export default function DashboardNav({
         </Link>
 
         <div className="flex shrink-0 items-center gap-2 sm:gap-3">
-          {/* Account menu: name + avatar opens Account settings / Change password */}
-          <div ref={accountRef} className="relative">
-            <button
-              type="button"
-              onClick={() => {
-                setAccountOpen((open) => !open)
-                setMenuOpen(false)
-              }}
-              aria-expanded={accountOpen}
-              aria-haspopup="menu"
-              aria-controls="dashboard-account-menu"
-              className="group flex items-center gap-2.5 rounded-lg p-1 transition duration-200 hover:bg-slate-50 motion-reduce:transition-none"
-            >
-              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-900 text-xs font-bold text-white ring-2 ring-slate-100 group-hover:ring-slate-400">
-                {initials}
-              </span>
-              <span className="hidden max-w-[12rem] truncate text-sm font-semibold text-slate-900 md:inline">
-                {displayName}
-              </span>
-              <svg
-                viewBox="0 0 20 20"
-                className={`hidden h-4 w-4 text-slate-400 transition-transform duration-200 motion-reduce:transition-none md:block ${accountOpen ? 'rotate-180' : ''}`}
-                fill="currentColor"
-                aria-hidden="true"
-              >
-                <path d="M5.23 7.21a.75.75 0 011.06.02L10 11.06l3.71-3.83a.75.75 0 111.08 1.04l-4.25 4.39a.75.75 0 01-1.08 0L5.21 8.27a.75.75 0 01.02-1.06z" />
-              </svg>
-            </button>
-
-            {accountOpen && (
-              <div
-                id="dashboard-account-menu"
-                role="menu"
-                className="absolute right-0 z-20 mt-2 w-56 animate-fade-in-up overflow-hidden rounded-xl border border-slate-200 bg-white py-1 shadow-lg motion-reduce:animate-none"
-              >
-                <p className="truncate border-b border-slate-100 px-4 py-2.5 text-sm font-semibold text-slate-900">
-                  {displayName}
-                </p>
-                <Link
-                  href="/dashboard/settings"
-                  role="menuitem"
-                  onClick={closeMenus}
-                  className="block px-4 py-2.5 text-sm text-slate-700 transition-colors duration-200 hover:bg-slate-100 motion-reduce:transition-none"
-                >
-                  Account settings
-                </Link>
-                <Link
-                  href="/account/password"
-                  role="menuitem"
-                  onClick={closeMenus}
-                  className="block px-4 py-2.5 text-sm text-slate-700 transition-colors duration-200 hover:bg-slate-100 motion-reduce:transition-none"
-                >
-                  Change password
-                </Link>
-                <form action="/logout" method="post" className="border-t border-slate-100 lg:hidden">
-                  <button
-                    type="submit"
-                    role="menuitem"
-                    className="block w-full px-4 py-2.5 text-left text-sm text-red-600 transition-colors duration-200 hover:bg-red-50 motion-reduce:transition-none"
-                  >
-                    Sign out
-                  </button>
-                </form>
-              </div>
-            )}
-          </div>
-
-          <form action="/logout" method="post" className="hidden lg:block">
-            <button
-              type="submit"
-              className={buttonSecondary}
-            >
-              Sign out
-            </button>
-          </form>
+          {/* Account menu (shared with the employee header) + Sign out */}
+          <AccountMenu
+            displayName={displayName}
+            settingsHref="/dashboard/settings"
+            onOpen={() => {
+              setMenuOpen(false)
+              setOpenDropdown(null)
+            }}
+          />
 
           {/* Mobile / tablet page menu */}
           <button
             type="button"
-            onClick={() => {
-              setMenuOpen((open) => !open)
-              setAccountOpen(false)
-            }}
+            onClick={() => setMenuOpen((open) => !open)}
             aria-expanded={menuOpen}
             aria-controls="dashboard-mobile-menu"
             aria-label={menuOpen ? 'Close menu' : 'Open menu'}

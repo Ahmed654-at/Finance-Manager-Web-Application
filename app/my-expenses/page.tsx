@@ -1,4 +1,4 @@
-import Link from 'next/link'
+import AccountMenu from '../components/AccountMenu'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { getCompanyContext } from '@/lib/company'
@@ -56,27 +56,18 @@ export default async function MyExpensesPage({
   return (
     <main className="min-h-screen bg-black px-4 py-8 text-slate-900">
       <div className="mx-auto max-w-4xl space-y-6">
-        <header className="flex animate-fade-in-up flex-col gap-3 rounded-2xl border border-slate-200 bg-white px-5 py-4 shadow-sm sm:flex-row sm:items-center sm:justify-between motion-reduce:animate-none">
-          <div>
-            <h1 className="text-lg font-bold text-slate-900">{company.name}</h1>
-            <p className="text-xs text-slate-500">
-              {accountName} · {user.email} · Employee
+        {/* Same top bar as the dashboard: app + company on the left, name-only account menu on the right. */}
+        <header className="flex animate-fade-in-up items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-black px-4 py-3 shadow-sm motion-reduce:animate-none lg:px-5">
+          <div className="min-w-0">
+            <p className="truncate text-base font-bold tracking-tight text-slate-900 sm:text-lg">
+              Company Finance Manager
             </p>
+            <p className="truncate text-xs text-slate-500">{company.name} · Employee</p>
           </div>
-          <Link
-            href="/account/password"
-            className="text-xs font-medium text-slate-500 transition-colors duration-200 hover:text-slate-900 motion-reduce:transition-none"
-          >
-            Change password
-          </Link>
-          <form action="/logout" method="post">
-            <button
-              type="submit"
-              className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 transition duration-200 hover:shadow-md active:scale-95 motion-reduce:transition-none"
-            >
-              Sign out
-            </button>
-          </form>
+
+          <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+            <AccountMenu displayName={accountName} />
+          </div>
         </header>
 
         {params.error && (
