@@ -56,7 +56,7 @@ export default async function MyExpensesPage({
   return (
     <main className="min-h-screen bg-black px-4 py-8 text-slate-900">
       <div className="mx-auto max-w-4xl space-y-6">
-        <header className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white px-5 py-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+        <header className="flex animate-fade-in-up flex-col gap-3 rounded-2xl border border-slate-200 bg-white px-5 py-4 shadow-sm sm:flex-row sm:items-center sm:justify-between motion-reduce:animate-none">
           <div>
             <h1 className="text-lg font-bold text-slate-900">{company.name}</h1>
             <p className="text-xs text-slate-500">
@@ -65,7 +65,7 @@ export default async function MyExpensesPage({
           </div>
           <Link
             href="/account/password"
-            className="text-xs font-medium text-slate-500 transition hover:text-slate-900"
+            className="text-xs font-medium text-slate-500 transition-colors duration-200 hover:text-slate-900 motion-reduce:transition-none"
           >
             Change password
           </Link>
@@ -89,15 +89,15 @@ export default async function MyExpensesPage({
         )}
 
         <div className="grid gap-4 sm:grid-cols-3">
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="animate-fade-in-up rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition duration-300 [animation-delay:75ms] hover:-translate-y-1 hover:shadow-lg motion-reduce:animate-none motion-reduce:transition-none">
             <p className="text-xs font-semibold uppercase tracking-wider text-amber-600">Awaiting approval</p>
             <p className="mt-2 text-2xl font-bold text-amber-600">{formatCurrency(sum('pending'), company.currency)}</p>
           </div>
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="animate-fade-in-up rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition duration-300 [animation-delay:150ms] hover:-translate-y-1 hover:shadow-lg motion-reduce:animate-none motion-reduce:transition-none">
             <p className="text-xs font-semibold uppercase tracking-wider text-blue-600">Approved</p>
             <p className="mt-2 text-2xl font-bold text-blue-600">{formatCurrency(sum('approved'), company.currency)}</p>
           </div>
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="animate-fade-in-up rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition duration-300 [animation-delay:225ms] hover:-translate-y-1 hover:shadow-lg motion-reduce:animate-none motion-reduce:transition-none">
             <p className="text-xs font-semibold uppercase tracking-wider text-emerald-600">Reimbursed</p>
             <p className="mt-2 text-2xl font-bold text-emerald-600">
               {formatCurrency(sum('reimbursed'), company.currency)}
@@ -105,7 +105,7 @@ export default async function MyExpensesPage({
           </div>
         </div>
 
-        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <section className="animate-fade-in-up rounded-2xl border border-slate-200 bg-white p-6 shadow-sm [animation-delay:300ms] motion-reduce:animate-none">
           <h2 className="text-lg font-semibold text-slate-900">Request an expense</h2>
           <p className="mt-1 text-xs text-slate-500">
             Your owner or admin will review it. You can only see your own requests.
@@ -192,7 +192,7 @@ export default async function MyExpensesPage({
           </form>
         </section>
 
-        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <section className="animate-fade-in-up rounded-2xl border border-slate-200 bg-white p-6 shadow-sm [animation-delay:375ms] motion-reduce:animate-none">
           <h2 className="text-lg font-semibold text-slate-900">Request salary</h2>
           <p className="mt-1 text-xs text-slate-500">
             Ask for your salary for a month. Your owner or admin will approve it and pay it.
@@ -254,7 +254,7 @@ export default async function MyExpensesPage({
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {salaries.map((sal) => (
-                    <tr key={sal.id}>
+                    <tr key={sal.id} className="transition-colors duration-200 hover:bg-slate-50 motion-reduce:transition-none">
                       <td className="py-3 pr-4">
                         <p className="font-medium text-slate-800">{sal.payment_month}</p>
                         {sal.review_note && (
@@ -283,7 +283,7 @@ export default async function MyExpensesPage({
           )}
         </section>
 
-        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <section className="animate-fade-in-up rounded-2xl border border-slate-200 bg-white p-6 shadow-sm [animation-delay:450ms] motion-reduce:animate-none">
           <h2 className="text-lg font-semibold text-slate-900">My requests</h2>
 
           {expenses.length === 0 ? (
@@ -304,7 +304,7 @@ export default async function MyExpensesPage({
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {expenses.map((exp) => (
-                    <tr key={exp.id}>
+                    <tr key={exp.id} className="transition-colors duration-200 hover:bg-slate-50 motion-reduce:transition-none">
                       <td className="py-3 pr-4 text-slate-600">{exp.expense_date}</td>
                       <td className="py-3 pr-4">
                         <p className="font-medium text-slate-800">{exp.title}</p>
