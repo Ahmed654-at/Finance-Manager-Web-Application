@@ -25,6 +25,7 @@ function LoginForm() {
   const [isSignUp, setIsSignUp] = useState(false)
   const searchParams = useSearchParams()
   const error = searchParams.get('error')
+  const notice = searchParams.get('notice')
   const action = isSignUp ? signup : login
 
   return (
@@ -64,8 +65,17 @@ function LoginForm() {
         </div>
 
         {error ? (
-          <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+          <div role="alert" className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
             {error}
+          </div>
+        ) : null}
+
+        {notice && !error ? (
+          <div
+            role="status"
+            className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700"
+          >
+            {notice}
           </div>
         ) : null}
 
@@ -94,9 +104,10 @@ function LoginForm() {
               name="password"
               type="password"
               required
+              minLength={isSignUp ? 8 : undefined}
               autoComplete={isSignUp ? 'new-password' : 'current-password'}
               className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-slate-900 placeholder:text-slate-400 focus:border-slate-500 focus:outline-none"
-              placeholder="Enter your password"
+              placeholder={isSignUp ? 'At least 8 characters' : 'Enter your password'}
             />
           </div>
 

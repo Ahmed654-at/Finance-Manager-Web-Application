@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { getCompanyContext } from '@/lib/company'
 import { formatCurrency } from '@/lib/currency'
+import { safeHttpUrl } from '@/lib/security'
 import {
   approveExpense,
   createTeamExpense,
@@ -303,11 +304,11 @@ export default async function TeamExpensesPage({
                       <td className="py-3 pr-4 font-semibold text-slate-900">{exp.submitted_by_name}</td>
                       <td className="py-3 pr-4">
                         <p className="font-medium text-slate-800">{exp.title}</p>
-                        {exp.receipt_url && (
+                        {safeHttpUrl(exp.receipt_url) && (
                           <a
-                            href={exp.receipt_url}
+                            href={safeHttpUrl(exp.receipt_url) ?? undefined}
                             target="_blank"
-                            rel="noreferrer"
+                            rel="noopener noreferrer"
                             className="text-xs text-blue-600 hover:underline"
                           >
                             View Receipt ↗

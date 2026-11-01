@@ -1,11 +1,10 @@
 import { NextRequest } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getCompanyContext } from '@/lib/company'
+import { csvCell } from '@/lib/security'
 
-function csvEscape(value: string | number | null | undefined) {
-  const stringValue = String(value ?? '')
-  return `"${stringValue.replace(/"/g, '""')}"`
-}
+// Neutralises spreadsheet formulas (=, +, -, @) in text cells.
+const csvEscape = csvCell
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)

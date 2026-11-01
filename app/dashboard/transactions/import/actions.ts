@@ -4,6 +4,10 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { getCompanyContext, canWrite, READ_ONLY_ERROR } from '@/lib/company'
+import { isIsoDate } from '@/lib/security'
+
+const MAX_CSV_BYTES = 1024 * 1024 // 1 MB
+const MAX_CSV_ROWS = 2000
 
 function parseCsvLine(line: string) {
   const values: string[] = []
@@ -56,6 +60,10 @@ export async function importTransactionsCsv(formData: FormData) {
     return { error: 'No CSV file uploaded.' }
   }
 
+  if (file.size > MAX_CSV_BYTES) {
+    return { error: 'The CSV file is too large. Please keep it under 1 MB.' }
+  }
+
   const csvText = await file.text()
 
   if (!csvText.trim()) {
@@ -69,6 +77,10 @@ export async function importTransactionsCsv(formData: FormData) {
 
   if (rows.length < 2) {
     return { error: 'CSV file must include a header row and at least one data row.' }
+  }
+
+  if (rows.length - 1 > MAX_CSV_ROWS) {
+    return { error: `A CSV can have at most ${MAX_CSV_ROWS} rows. Split the file and import it in parts.` }
   }
 
   const { data: categories } = await supabase
@@ -92,7 +104,7 @@ export async function importTransactionsCsv(formData: FormData) {
     const normalizedDate = String(date ?? '').trim()
     const amount = Number(amountText ?? '')
 
-    if (!['income', 'expense'].includes(normalizedType) || !normalizedDate || !Number.isFinite(amount) || amount <= 0) {
+    if (!['income', 'expense'].includes(normalizedType) || !isIsoDate(normalizedDate) || !Number.isFinite(amount) || amount <= 0) {
       skipped += 1
       continue
     }

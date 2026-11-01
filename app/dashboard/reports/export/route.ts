@@ -1,11 +1,10 @@
 import { NextRequest } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getCompanyContext } from '@/lib/company'
+import { csvCell, isIsoDate } from '@/lib/security'
 
-function csvEscape(value: string | number) {
-  const stringValue = String(value ?? '')
-  return `"${stringValue.replace(/"/g, '""')}"`
-}
+// Neutralises spreadsheet formulas (=, +, -, @) in text cells.
+const csvEscape = csvCell
 
 const formatDateInput = (date: Date) => date.toISOString().slice(0, 10)
 
@@ -23,8 +22,11 @@ function getMonthBounds(date = new Date()) {
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
   const type = searchParams.get('type')
-  const from = searchParams.get('from') || getMonthBounds().from
-  const to = searchParams.get('to') || getMonthBounds().to
+  const requestedFrom = searchParams.get('from') ?? ''
+  const requestedTo = searchParams.get('to') ?? ''
+  // Only real YYYY-MM-DD dates are accepted; anything else falls back to the current month.
+  const from = isIsoDate(requestedFrom) ? requestedFrom : getMonthBounds().from
+  const to = isIsoDate(requestedTo) ? requestedTo : getMonthBounds().to
 
   const supabase = await createClient()
   const {

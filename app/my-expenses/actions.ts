@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { getCompanyContext } from '@/lib/company'
 import { getAccountName } from '@/lib/user'
+import { safeHttpUrl } from '@/lib/security'
 
 const PURPOSES = ['project', 'marketing', 'other'] as const
 
@@ -22,8 +23,12 @@ export async function submitMyExpense(formData: FormData) {
   const expenseDate = String(formData.get('expense_date') ?? '').trim() || new Date().toISOString().slice(0, 10)
   const purpose = String(formData.get('purpose') ?? '').trim()
   const notes = String(formData.get('notes') ?? '').trim() || null
-  const receiptUrl = String(formData.get('receipt_url') ?? '').trim() || null
+  const rawReceiptUrl = String(formData.get('receipt_url') ?? '').trim() || null
+  const receiptUrl = safeHttpUrl(rawReceiptUrl)
 
+  if (rawReceiptUrl && !receiptUrl) {
+    redirect('/my-expenses?error=' + encodeURIComponent('The receipt link must start with http:// or https://.'))
+  }
   if (!title) {
     redirect('/my-expenses?error=' + encodeURIComponent('Please describe the expense.'))
   }

@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { getCompanyContext } from '@/lib/company'
+import { isSupportedCurrency } from '@/lib/security'
 
 export async function updateCompany(formData: FormData) {
   const supabase = await createClient()
@@ -31,6 +32,10 @@ export async function updateCompany(formData: FormData) {
 
   if (!name) {
     return { error: 'Company name is required.' }
+  }
+
+  if (!isSupportedCurrency(currency)) {
+    return { error: 'Please choose a currency from the list.' }
   }
 
   const { error: updateError } = await supabase

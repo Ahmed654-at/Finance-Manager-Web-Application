@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { getCompanyContext, canWrite, READ_ONLY_ERROR } from '@/lib/company'
+import { safeHttpUrl } from '@/lib/security'
 
 export async function createTeamExpense(formData: FormData) {
   const supabase = await createClient()
@@ -20,11 +21,16 @@ export async function createTeamExpense(formData: FormData) {
   const categoryId = (formData.get('category_id') as string | null) || null
   const accountId = (formData.get('account_id') as string | null) || null
   const status = (formData.get('status') as string) || 'approved'
-  const receiptUrl = (formData.get('receipt_url') as string | null)?.trim() || null
+  const rawReceiptUrl = (formData.get('receipt_url') as string | null)?.trim() || null
+  const receiptUrl = safeHttpUrl(rawReceiptUrl)
   const notes = (formData.get('notes') as string | null)?.trim() || null
 
   if (!submittedByName || !title || amount <= 0) {
     return { error: 'Please provide team member name, title, and valid amount.' }
+  }
+
+  if (rawReceiptUrl && !receiptUrl) {
+    return { error: 'The receipt link must start with http:// or https://.' }
   }
 
   let transactionId: string | null = null

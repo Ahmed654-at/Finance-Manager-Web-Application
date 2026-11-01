@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { NextRequest } from 'next/server'
+import { isSupportedCurrency } from '@/lib/security'
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient()
@@ -15,7 +16,8 @@ export async function POST(request: NextRequest) {
 
   const formData = await request.formData()
   const name = formData.get('name') as string
-  const currency = (formData.get('currency') as string) || 'PKR'
+  const requestedCurrency = (formData.get('currency') as string) || 'PKR'
+  const currency = isSupportedCurrency(requestedCurrency) ? requestedCurrency : 'PKR'
 
   if (!name || name.trim().length === 0) {
     redirect('/onboarding?error=Company name is required')
